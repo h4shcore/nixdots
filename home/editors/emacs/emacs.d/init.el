@@ -76,6 +76,8 @@
 (setq evil-want-keybinding nil) ; must be set before evil/evil-collection load
 (use-package evil
   :demand ; No lazy loading
+  :init
+  (setq evil-want-C-u-scroll t) ; must be set before evil-mode runs
   :config
   (evil-mode 1))
 
@@ -83,14 +85,17 @@
 (use-package emacs
   :init
   (set-face-attribute 'default nil
-    :font "Iosevka Nerd Font"
+    :font "JetBrainsMono Nerd Font"
     :height 160))
 
 ;; themes
-(use-package doom-themes
+(use-package catppuccin-theme
   :demand
   :config
-  (load-theme 'doom-challenger-deep t))
+  (setq catppuccin-flavor 'mocha)
+  (load-theme 'catppuccin :no-confirm)
+  (catppuccin-set-color 'mauve "#f38ba8" 'mocha)
+  (catppuccin-reload))
 
 ;; number lines
 (use-package emacs
@@ -104,7 +109,6 @@
 
 ;; doom modeline
 (use-package doom-modeline
-  :ensure t
   :init (doom-modeline-mode 1))
 
 ;; nerd-icons
@@ -210,9 +214,6 @@
   (leader-keys
     "'" '(vterm-toggle :which-key "terminal")))
 
-;; undo
-(setq evil-want-C-u-scroll t)
-
 ;; comments
 (use-package evil-nerd-commenter
   :general
@@ -262,7 +263,7 @@
   (setq backup-directory-alist `(("." . "~/.saves"))))
 
 ;; lsp
-(use-package company-mode
+(use-package company
   :init
   (global-company-mode))
 
@@ -335,5 +336,18 @@
   (leader-keys
     "c" '(:ignore t :which-key "compile")
     "c <escape>" '(keyboard-escape-quit :which-key t)
-    "c c" '(projectile-compile-project :which-key "compile")
+    "c c" '(compile :which-key "compile")
     "c r" '(recompile :which-key "recompile")))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("e184d8607cc9933f2ba8e180699365bdf8b6f311834a9e15c71947b38be0caa3" default)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
