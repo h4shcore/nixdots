@@ -1,6 +1,7 @@
 {pkgs, inputs, ...}: {
   home.packages = with pkgs; [
     spotify
+    pear-desktop
     vesktop
     equibop
     firefox
