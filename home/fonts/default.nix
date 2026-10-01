@@ -23,6 +23,6 @@
 
   home.packages = with pkgs; [
     noto-fonts-color-emoji
-    nerd-fonts.geist-mono
+    maple-mono.NF
   ];
 }

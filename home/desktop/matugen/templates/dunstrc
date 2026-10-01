@@ -8,7 +8,7 @@ frame_width = 2
 separator_color = frame
 highlight = "{{colors.primary.default.hex}}"
 
-font = GeistMono Nerd Font 10
+font = Maple Mono NF 10
 
 shrink = true
 word_wrap = yes

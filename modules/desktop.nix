@@ -1,3 +1,13 @@
 {...}: {
-  programs.niri.enable = true;
+  programs = {
+    niri = {
+      enable = true;
+    };
+
+    hyprland = {
+      enable = true;
+      withUWSM = true;
+      xwayland.enable = true; # Xwayland can be disabled
+    };
+  };
 }

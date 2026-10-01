@@ -85,7 +85,7 @@
 (use-package emacs
   :init
   (set-face-attribute 'default nil
-    :font "GeistMono Nerd Font"
+    :font "MapleMono NF"
     :height 160))
 
 ;; themes
