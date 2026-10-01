@@ -208,6 +208,7 @@
   :general
   (leader-keys
     "'" '(vterm-toggle :which-key "terminal")))
+(setq vterm-shell (executable-find "fish"))
 
 ;; comments
 (use-package evil-nerd-commenter
