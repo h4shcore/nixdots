@@ -24,6 +24,13 @@ contrast = 0.5
 # IF the CLI flag is specified, it will override this value.
 source_color_index = 0
 
+# Fixed hues, harmonized toward the wallpaper. Used for the red/green/yellow
+# accents in the starship prompt.
+[config.custom_colors]
+red    = "#e06c75"
+green  = "#98c379"
+yellow = "#e5c07b"
+
 [config.wallpaper]
 # Whether to set the wallpaper or not
 set = true
@@ -44,6 +51,15 @@ post_hook = "pkill dunst; dunst &"
 [templates.foot]
 input_path = "~/.config/matugen/templates/foot.ini"
 output_path = "~/.config/foot/theme.ini"
+
+[templates.kitty]
+input_path = "~/.config/matugen/templates/kitty-colors.conf"
+output_path = "~/.config/kitty/colors.conf"
+post_hook = "pkill -USR1 -x kitty || true"
+
+[templates.starship]
+input_path = "~/.config/matugen/templates/starship.toml"
+output_path = "~/.config/starship.toml"
 
 [templates.fuzzel]
 input_path = "~/.config/matugen/templates/fuzzel.ini"

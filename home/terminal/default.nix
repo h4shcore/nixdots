@@ -17,6 +17,7 @@
     fish
     starship
     foot
+    kitty
     eza
     btop
     cava
@@ -36,5 +37,5 @@
 
   xdg.configFile."fish/config.fish".source = ./fish/config.fish;
   xdg.configFile."foot/foot.ini".source = ./foot/foot.ini;
-  xdg.configFile."starship.toml".source = ./starship/starship.toml;
+  xdg.configFile."kitty/kitty.conf".source = ./kitty/kitty.conf;
 }

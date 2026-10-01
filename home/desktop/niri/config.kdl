@@ -103,7 +103,7 @@ spawn-sh-at-startup "waybar"
 spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
 
 binds {
-    Mod+Return hotkey-overlay-title="Open a Terminal: foot " { spawn "foot"; }
+    Mod+Return hotkey-overlay-title="Open a Terminal: kitty " { spawn "kitty"; }
     Mod+R hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Mod+V hotkey-overlay-title="Open Clipboard" { spawn-sh "cliphist list | fuzzel --dmenu -w 60 | cliphist decode | wl-copy"; }
     Mod+B hotkey-overlay-title="Open woomer" { spawn-sh "woomer"; }

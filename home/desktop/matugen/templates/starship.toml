@@ -1,0 +1,141 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = false
+command_timeout = 500
+scan_timeout = 20
+palette = 'matugen'
+
+format = """
+$username$hostname[ in ](fg:subtext)$directory$git_branch$git_status\
+$nix_shell$c$rust$golang$python$nodejs$lua$haskell\
+$jobs$status$cmd_duration\
+$line_break$character"""
+
+# fish draws this natively on the right
+right_format = '$time'
+
+[palettes.matugen]
+red     = '{{colors.red.default.hex}}'
+green   = '{{colors.green.default.hex}}'
+yellow  = '{{colors.yellow.default.hex}}'
+blue    = '{{colors.primary.default.hex}}'
+mauve   = '{{colors.tertiary.default.hex}}'
+subtext = '{{colors.on_surface_variant.default.hex}}'
+
+# ── identity + location ───────────────────────────────────────
+[username]
+show_always = true
+style_user = 'bold fg:red'
+style_root = 'bold fg:red'
+format = '[$user]($style)'
+
+[hostname]
+ssh_only = false
+trim_at = ''
+style = 'bold fg:red'
+format = '[@$hostname]($style)'
+
+[directory]
+style = 'bold fg:blue'
+format = '[$path]($style)'
+truncation_length = 0
+truncate_to_repo = false
+home_symbol = '~'
+
+# ── git ───────────────────────────────────────────────────────
+[git_branch]
+style = 'fg:mauve'
+format = '[ \($branch\)]($style)'
+
+[git_status]
+style = 'fg:yellow'
+format = '([ \[$all_status$ahead_behind\]]($style))'
+conflicted = '=${count}'
+ahead = '⇡${count}'
+behind = '⇣${count}'
+diverged = '⇕⇡${ahead_count}⇣${behind_count}'
+up_to_date = ''
+untracked = '?${count}'
+stashed = '≡${count}'
+modified = '!${count}'
+staged = '+${count}'
+renamed = '»${count}'
+deleted = '✘${count}'
+
+# ── environment ───────────────────────────────────────────────
+[nix_shell]
+symbol = ' '
+impure_msg = 'impure'
+pure_msg = 'pure'
+style = 'fg:blue'
+format = '[ via ](fg:subtext)[$symbol$state]($style)'
+
+[c]
+symbol = ' '
+style = 'fg:blue'
+format = '[ via ](fg:subtext)[$symbol($version)]($style)'
+
+[rust]
+symbol = ' '
+style = 'fg:blue'
+format = '[ via ](fg:subtext)[$symbol($version)]($style)'
+
+[golang]
+symbol = ' '
+style = 'fg:blue'
+format = '[ via ](fg:subtext)[$symbol($version)]($style)'
+
+[python]
+symbol = ' '
+style = 'fg:blue'
+format = '[ via ](fg:subtext)[$symbol($version)( \($virtualenv\))]($style)'
+
+[nodejs]
+symbol = ' '
+style = 'fg:blue'
+format = '[ via ](fg:subtext)[$symbol($version)]($style)'
+
+[lua]
+symbol = ' '
+style = 'fg:blue'
+format = '[ via ](fg:subtext)[$symbol($version)]($style)'
+
+[haskell]
+symbol = ' '
+style = 'fg:blue'
+format = '[ via ](fg:subtext)[$symbol($version)]($style)'
+
+# ── state of the last command ─────────────────────────────────
+[jobs]
+symbol = '✦'
+number_threshold = 1
+symbol_threshold = 1
+style = 'fg:yellow'
+format = '[ $symbol$number]($style)'
+
+[status]
+disabled = false
+style = 'fg:red'
+format = '[ ✘ $status]($style)'
+
+[cmd_duration]
+min_time = 2000
+style = 'fg:subtext'
+format = '[ took $duration]($style)'
+
+# ── right prompt ──────────────────────────────────────────
+[time]
+disabled = false
+time_format = '%H:%M'
+style = 'fg:subtext'
+format = '[$time]($style)'
+
+# ── prompt character ──────────────────────────────────────────
+[character]
+format = '$symbol '
+success_symbol = '[❯](fg:green)'
+error_symbol = '[❯](fg:red)'
+vimcmd_symbol = '[❮](fg:mauve)'
+vimcmd_replace_symbol = '[❮](fg:yellow)'
+vimcmd_replace_one_symbol = '[❮](fg:yellow)'
+vimcmd_visual_symbol = '[❮](fg:blue)'
