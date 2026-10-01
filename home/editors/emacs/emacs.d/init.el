@@ -89,13 +89,8 @@
     :height 160))
 
 ;; themes
-(use-package catppuccin-theme
-  :demand
-  :config
-  (setq catppuccin-flavor 'mocha)
-  (load-theme 'catppuccin :no-confirm)
-  (catppuccin-set-color 'mauve "#f38ba8" 'mocha)
-  (catppuccin-reload))
+(add-to-list 'custom-theme-load-path "~/.emacs.d/")
+(load-theme 'matugen t)
 
 ;; number lines
 (use-package emacs
