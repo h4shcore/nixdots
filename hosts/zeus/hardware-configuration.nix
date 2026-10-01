@@ -22,7 +22,7 @@
       options = [ "subvol=@" "compress=zstd" "noatime" ];
     };
 
-  boot.initrd.luks.devices."cryptroot".device = "/dev/disk/by-uuid/3de9e5ce-fc31-4b1f-87f1-61a44a6ce8f3";
+  boot.initrd.luks.devices."cryptroot".device = "/dev/disk/by-uuid/f0f61b1d-d6f9-410a-8fb2-fcf0357d2dde";
 
   fileSystems."/home" =
     { device = "/dev/mapper/cryptroot";
@@ -37,7 +37,7 @@
     };
 
   fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/2AC9-CD48";
+    { device = "/dev/disk/by-uuid/62A7-3870";
       fsType = "vfat";
       options = [ "fmask=0022" "dmask=0022" ];
     };
