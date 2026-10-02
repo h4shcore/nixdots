@@ -19,7 +19,8 @@
     ./theme.nix
 
     ./fuzzel
-    ./niri
+    # ./niri
+    ./hypr
   ];
 
   xdg.configFile."waybar/config.jsonc".source = ./waybar/config.jsonc;
