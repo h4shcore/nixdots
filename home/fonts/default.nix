@@ -4,15 +4,15 @@
 
     defaultFonts = {
       monospace = [
-        "GeistMono Nerd Font"
+        "MapleMono NF"
       ];
 
       sansSerif = [
-        "GeistMono Nerd Font"
+        "MapleMono NF"
       ];
 
       serif = [
-        "GeistMono Nerd Font"
+        "MapleMono NF"
       ];
 
       emoji = [

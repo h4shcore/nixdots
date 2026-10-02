@@ -1,13 +1,20 @@
-{...}: {
-  programs = {
-    niri = {
-      enable = true;
-    };
+{ pkgs, ... }: {
+  programs.hyprland = {
+    enable = true;
+    withUWSM = true;
+    xwayland.enable = true;
+  };
 
-    hyprland = {
-      enable = true;
-      withUWSM = true;
-      xwayland.enable = true; # Xwayland can be disabled
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    config = {
+      common.default = [ "gtk" ];
+      hyprland = {
+        default = [ "hyprland" "gtk" ];
+        "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
+        "org.freedesktop.impl.portal.Screenshot" = [ "hyprland" ];
+      };
     };
   };
 }
