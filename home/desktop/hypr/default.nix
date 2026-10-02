@@ -5,7 +5,7 @@ let
   liveEdit = false;
 
   # Path to your flake repo, only used when liveEdit = true
-  repoPath = "${config.home.homeDirectory}/nixos";
+  repoPath = "${config.home.homeDirectory}/dotfiles";
 
   src = path:
     if liveEdit
