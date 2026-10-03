@@ -22,6 +22,7 @@
     ./fuzzel
     # ./niri
     ./hypr
+    ./quickshell
   ];
 
   xdg.configFile."waybar/config.jsonc".source = ./waybar/config.jsonc;
