@@ -38,7 +38,7 @@ set = true
 # The base command to run for applying the wallpaper.
 # Keywords like {{ image }} or anything that works inside of hooks works here.
 # You could also set a static color if you use the color keywords and the wallpaper setter supports it.
-command = "awww img --transition-type center {{ image }}; dunstify 'enjoy your new colorscheme :D'"
+command = "awww img --transition-type center {{ image }}; notify-send 'enjoy your new colorscheme :D'"
 
 # For example, killing the wallpaper daemon. Usage is like a normal hook.
 # pre_hook = ""
@@ -116,3 +116,7 @@ output_path = '~/.config/doom/themes/matugen-theme.el'
 [templates.emacs]
 input_path = '~/.config/matugen/templates/matugen-theme.el'
 output_path = '~/.emacs.d/matugen-theme.el'
+
+[templates.quickshell]
+input_path = '~/.config/matugen/templates/quickshell-colors.json'
+output_path = '~/.config/quickshell/colors.json'
