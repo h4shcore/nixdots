@@ -2,6 +2,7 @@
 return {
     terminal    = "kitty",
     fileManager = "dolphin",
-    menu        = "fuzzel",
+    -- menu        = "fuzzel",
+    menu        = "qs -c notch ipc call launcher toggle",
     mainMod     = "SUPER",
 }
