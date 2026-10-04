@@ -3,44 +3,47 @@ import QtQuick.Shapes
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
-import Quickshell.Services.SystemTray
 import qs.common
 import qs.services
 
+// Full-screen layer: draws the screen border + a notch hanging off the top edge.
+// Collapsed = just the clock. Hover = expands into the control center.
+// Only the notch takes input; everything else is click-through.
 PanelWindow {
     id: win
 
     property bool expanded: false
     property string view: "main"   // "main" | "notifs"
-    property bool trayOpen: false
-    property var trayItem: null
     property bool shown: false
+    property bool songShown: false
+    property bool songArmed: false
 
     Component.onCompleted: shown = true
 
     onExpandedChanged: {
         if (expanded) Network.refresh();
-        else {
-            view = "main";
-            trayOpen = false;
-        }
+        else view = "main";
     }
 
     // toasts only on the monitor you're working on
     readonly property bool focusedHere: (Hyprland.focusedMonitor?.name ?? screen.name) === screen.name
 
-    readonly property Item cur: !expanded ? null : (view === "notifs" ? notifPanel : view === "traymenu" ? trayMenu : cc)
+    // song toast replaces the clock while it shows
+    readonly property bool songShowing: !expanded && songShown
+
+    readonly property Item cur: expanded ? (view === "notifs" ? notifPanel : cc) : (songShown ? songToast : null)
 
     // notch geometry
     readonly property real pillW: clock.implicitWidth + Theme.pad * 2
     readonly property real targetW: Math.max(pillW, cur ? cur.implicitWidth + Theme.pad * 2 : 0)
-    readonly property real targetH: Theme.pillHeight + (cur ? cur.implicitHeight + Theme.pad : 0)
+    readonly property real targetH: songShowing ? Theme.border + 10 + songToast.implicitHeight + 12
+                                                 : Theme.pillHeight + (cur ? cur.implicitHeight + Theme.pad : 0)
     property real bodyW: targetW
     property real bodyH: targetH
-    property real bodyR: expanded ? 24 : Theme.notchRadius
+    property real bodyR: cur ? 24 : Theme.notchRadius
 
     Behavior on bodyW { Anim {} }
-    Behavior on bodyH { Anim { curve: win.expanded ? Theme.spring : Theme.emphasized } }
+    Behavior on bodyH { Anim { curve: win.cur ? Theme.spring : Theme.emphasized } }
     Behavior on bodyR { Anim { duration: 200; curve: Theme.standard } }
 
     anchors {
@@ -57,6 +60,27 @@ PanelWindow {
         item: notch
         Region { item: dock }
         Region { item: wsDock }
+        Region { item: trayDock }
+    }
+
+    // 3s "now playing" toast in the notch when the track changes
+    Timer {
+        id: songTimer
+        interval: 3000
+        onTriggered: win.songShown = false
+    }
+    Timer {
+        interval: 2000
+        running: true
+        onTriggered: win.songArmed = true
+    }
+    Connections {
+        target: Players.active
+        function onTrackTitleChanged() {
+            if (!win.songArmed || !win.focusedHere || !Players.active?.trackTitle) return;
+            win.songShown = true;
+            songTimer.restart();
+        }
     }
 
     Timer {
@@ -104,17 +128,28 @@ PanelWindow {
         }
     }
 
-    // ───────────── notification dock (top-right) ─────────────
+    // ───────────── corner docks: workspaces (top-left), tray (top-right), toasts (bottom-right) ─────────────
     WsDock {
         id: wsDock
         screen: win.screen
+    }
+
+    TrayDock {
+        id: trayDock
         screenWidth: win.width
     }
 
     NotifDock {
         id: dock
         screenWidth: win.width
+        screenHeight: win.height
         active: win.focusedHere && !(win.expanded && win.view === "notifs")
+    }
+
+    OsdDock {
+        screenWidth: win.width
+        screenHeight: win.height
+        active: !win.expanded
     }
 
     // ───────────── the notch ─────────────
@@ -178,7 +213,7 @@ PanelWindow {
             anchors.fill: parent
             clip: true
 
-            // header row: clock (swapped for the tray when toggled) + right-side chips
+            // header row: clock + notification bell
             Item {
                 width: parent.width
                 y: Theme.border
@@ -187,116 +222,32 @@ PanelWindow {
                 Clock {
                     id: clock
                     anchors.centerIn: parent
-                    opacity: win.trayOpen ? 0 : 1
-                    scale: win.trayOpen ? 0.9 : 1
+                    opacity: win.songShowing ? 0 : 1
+                    scale: win.songShowing ? 0.9 : 1
                     Behavior on opacity { Anim { duration: 200; curve: Theme.standard } }
                     Behavior on scale { Anim { duration: 200; curve: Theme.standard } }
                 }
 
-                Tray {
-                    id: tray
-                    anchors.centerIn: parent
-                    cell: 26
-                    iconSize: 18
-                    onMenuRequested: item => {
-                        win.trayItem = item;
-                        win.view = "traymenu";
-                    }
-                    opacity: win.trayOpen ? 1 : 0
-                    scale: win.trayOpen ? 1 : 0.9
-                    enabled: win.trayOpen
-                    Behavior on opacity { Anim { duration: 250; curve: Theme.standard } }
-                    Behavior on scale { Anim { duration: 250 } }
-                }
-
-                // in-notch tooltip for hovered tray icons
-                Rectangle {
-                    id: tip
-
-                    readonly property var it: tray.hoveredItem
-
-                    z: 10
-                    visible: opacity > 0
-                    opacity: win.trayOpen && it !== null && (it.tooltipTitle || it.title) ? 1 : 0
-                    Behavior on opacity { Anim { duration: 150; curve: Theme.standard } }
-
-                    y: parent.height + 4
-                    x: Math.max(8, Math.min(parent.width - width - 8, tray.x + tray.hoverX - width / 2))
-                    width: tipCol.implicitWidth + 20
-                    height: tipCol.implicitHeight + 12
-                    radius: 12
-                    color: Theme.surfaceHiest
-
-                    Column {
-                        id: tipCol
-                        anchors.centerIn: parent
-                        spacing: 2
-
-                        Label {
-                            width: Math.min(implicitWidth, 260)
-                            text: tip.it ? (tip.it.tooltipTitle || tip.it.title) : ""
-                            font.bold: true
-                            font.pixelSize: 12
-                        }
-                        Label {
-                            width: Math.min(implicitWidth, 260)
-                            visible: text !== ""
-                            text: tip.it ? (tip.it.tooltipDescription || "") : ""
-                            color: Theme.fgDim
-                            font.pixelSize: 11
-                        }
-                    }
-                }
-
-                Row {
+                Chip {
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.pad - 6
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 2
                     opacity: win.expanded ? 1 : 0
                     enabled: win.expanded
+                    active: win.view === "notifs"
+                    onClicked: win.view = win.view === "notifs" ? "main" : "notifs"
                     Behavior on opacity { Anim { duration: 250; curve: Theme.standard } }
 
-                    // tray toggle
-                    Chip {
-                        visible: SystemTray.items.values.length > 0
-                        active: win.trayOpen
-                        onClicked: {
-                            win.trayOpen = !win.trayOpen;
-                            if (!win.trayOpen && win.view === "traymenu") win.view = "main";
-                        }
-
-                        Icon {
-                            text: "\uf104"
-                            font.pixelSize: 13
-                            rotation: win.trayOpen ? 180 : 0
-                            Behavior on rotation { Anim {} }
-                        }
-                        Label {
-                            text: SystemTray.items.values.length
-                            font.pixelSize: 12
-                        }
+                    Icon {
+                        text: Notifs.dnd ? "\uf1f6" : "\uf0f3"
+                        font.pixelSize: 13
+                        color: Notifs.count > 0 && !Notifs.dnd ? Theme.primary : Theme.fg
                     }
-
-                    // notifications
-                    Chip {
-                        active: win.view === "notifs"
-                        onClicked: {
-                            win.trayOpen = false;
-                            win.view = win.view === "notifs" ? "main" : "notifs";
-                        }
-
-                        Icon {
-                            text: Notifs.dnd ? "\uf1f6" : "\uf0f3"
-                            font.pixelSize: 13
-                            color: Notifs.count > 0 && !Notifs.dnd ? Theme.primary : Theme.fg
-                        }
-                        Label {
-                            visible: Notifs.count > 0
-                            text: Notifs.count
-                            font.pixelSize: 12
-                            color: Theme.primary
-                        }
+                    Label {
+                        visible: Notifs.count > 0
+                        text: Notifs.count
+                        font.pixelSize: 12
+                        color: Theme.primary
                     }
                 }
             }
@@ -312,16 +263,14 @@ PanelWindow {
                 Behavior on opacity { Anim { duration: 200; curve: Theme.standard } }
             }
 
-            TrayMenu {
-                id: trayMenu
+            SongToast {
+                id: songToast
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: Theme.pillHeight
+                y: Theme.border + 10
                 width: implicitWidth
-                item: win.trayItem
-                opacity: win.expanded && win.view === "traymenu" ? 1 : 0
+                opacity: !win.expanded && win.songShown ? 1 : 0
                 visible: opacity > 0
-                Behavior on opacity { Anim { duration: 200; curve: Theme.standard } }
-                onClose: win.view = "main"
+                Behavior on opacity { Anim { duration: 250; curve: Theme.standard } }
             }
 
             NotifPanel {

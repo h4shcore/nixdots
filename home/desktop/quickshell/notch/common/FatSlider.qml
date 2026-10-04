@@ -25,12 +25,13 @@ Item {
         property real value: 0
         property color col: Theme.fg
 
-        Icon {
-            x: 15
+        InkIcon {
+            x: 12
             anchors.verticalCenter: parent.verticalCenter
             text: parent.glyph
             color: parent.col
-            font.pixelSize: 16
+            pixelSize: 16
+            box: 28
         }
         Label {
             anchors.right: parent.right

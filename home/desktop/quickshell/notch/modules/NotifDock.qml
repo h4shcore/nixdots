@@ -4,12 +4,13 @@ import Quickshell
 import qs.common
 import qs.services
 
-// Toast dock attached to the top-right corner of the screen border.
-// Slides in from the right; concave ears blend it into the top + right borders.
+// Toast dock attached to the bottom-right corner of the screen border.
+// Slides in from the right; concave ears blend it into the bottom + right borders.
 Item {
     id: root
 
     required property real screenWidth
+    required property real screenHeight
     property bool active: true
 
     readonly property real cardW: 340
@@ -19,13 +20,13 @@ Item {
     readonly property real r: 20
 
     property real boxH: 0
-    property real slide: shown ? 0 : width + e + 24
+    property real slide: shown ? 0 : width + 24
 
     // keep the last height while sliding away
     Binding {
         target: root
         property: "boxH"
-        value: root.t + 8 + list.contentHeight + 10
+        value: 10 + list.contentHeight + 8 + root.t
         when: root.shown
         restoreMode: Binding.RestoreNone
     }
@@ -33,12 +34,13 @@ Item {
     Behavior on slide { Anim { duration: Theme.dur.slow; curve: root.shown ? Theme.spring : Theme.emphasized } }
 
     width: cardW + t + 20
-    height: Math.max(boxH, t + e + r)
+    height: Math.max(boxH, r + t + e + 20)
     x: screenWidth - width + slide
-    y: 0
+    y: screenHeight - height
 
     Shape {
         x: -root.e
+        y: -root.e
         width: root.width + root.e
         height: root.height + root.e
         preferredRendererType: Shape.CurveRenderer
@@ -55,24 +57,25 @@ Item {
             fillColor: Theme.surface
             strokeWidth: -1
 
-            startX: 0
+            // shape-local = root-local + (e, e)
+            startX: sp.w + sp.e
             startY: 0
-            PathLine { x: sp.w + sp.e; y: 0 }
+            PathLine { x: sp.w - sp.t + sp.e; y: 0 }
+            PathArc { x: sp.w - sp.t; y: sp.e; radiusX: sp.e; radiusY: sp.e }
+            PathLine { x: sp.r + sp.e; y: sp.e }
+            PathArc { x: sp.e; y: sp.r + sp.e; radiusX: sp.r; radiusY: sp.r; direction: PathArc.Counterclockwise }
+            PathLine { x: sp.e; y: sp.h - sp.t }
+            PathArc { x: 0; y: sp.h - sp.t + sp.e; radiusX: sp.e; radiusY: sp.e }
+            PathLine { x: 0; y: sp.h + sp.e }
             PathLine { x: sp.w + sp.e; y: sp.h + sp.e }
-            PathLine { x: sp.w - sp.t + sp.e; y: sp.h + sp.e }
-            PathArc { x: sp.w - sp.t; y: sp.h; radiusX: sp.e; radiusY: sp.e; direction: PathArc.Counterclockwise }
-            PathLine { x: sp.r + sp.e; y: sp.h }
-            PathArc { x: sp.e; y: sp.h - sp.r; radiusX: sp.r; radiusY: sp.r }
-            PathLine { x: sp.e; y: sp.t + sp.e }
-            PathArc { x: 0; y: sp.t; radiusX: sp.e; radiusY: sp.e; direction: PathArc.Counterclockwise }
-            PathLine { x: 0; y: 0 }
+            PathLine { x: sp.w + sp.e; y: 0 }
         }
     }
 
     ListView {
         id: list
         x: 10
-        y: root.t + 8
+        y: 10
         width: root.cardW
         height: contentHeight
         spacing: 8
