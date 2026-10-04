@@ -31,7 +31,7 @@ Item {
             text: parent.glyph
             color: parent.col
             pixelSize: 16
-            box: 28
+            box: 20
         }
         Label {
             anchors.right: parent.right
