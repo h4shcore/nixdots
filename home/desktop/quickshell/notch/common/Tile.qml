@@ -26,9 +26,10 @@ Rectangle {
         }
         spacing: 10
 
-        Icon {
+        InkIcon {
             text: root.glyph
-            font.pixelSize: 17
+            pixelSize: 17
+            box: 26
             color: root.on ? Theme.primaryFg : Theme.fg
         }
         ColumnLayout {

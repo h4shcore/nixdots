@@ -18,10 +18,11 @@ Rectangle {
     Behavior on color { ColorAnimation { duration: 150 } }
     Behavior on scale { Anim { duration: Theme.dur.fast } }
 
-    Icon {
+    InkIcon {
         anchors.centerIn: parent
         text: root.glyph
-        font.pixelSize: root.size * 0.42
+        pixelSize: Math.round(root.size * 0.42)
+        box: root.size
         color: root.primary ? Theme.primaryFg : Theme.fg
     }
 

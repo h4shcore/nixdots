@@ -151,9 +151,10 @@ Item {
             height: Theme.pillHeight - root.t
             spacing: 8
 
-            Icon {
+            InkIcon {
                 text: root.special !== "" ? root.specialInfo(root.special).glyph : "\uf009"
-                font.pixelSize: 13
+                pixelSize: 13
+                box: 20
                 color: Theme.primary
             }
             Label {
@@ -231,10 +232,11 @@ Item {
                     color: on ? Theme.primary : sm.containsMouse ? Theme.surfaceHiest : Theme.surfaceHi
                     Behavior on color { ColorAnimation { duration: 150 } }
 
-                    Icon {
+                    InkIcon {
                         anchors.centerIn: parent
                         text: scell.modelData.glyph
-                        font.pixelSize: 12
+                        pixelSize: 13
+                        box: 28
                         color: scell.on ? Theme.primaryFg : (root.hasSpecial(scell.modelData.name) ? Theme.fg : Theme.fgDim)
                     }
                     // dot = has windows

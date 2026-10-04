@@ -55,12 +55,15 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
     WlrLayershell.namespace: "notch"
+    WlrLayershell.keyboardFocus: LauncherState.open && focusedHere ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     mask: Region {
         item: notch
         Region { item: dock }
         Region { item: wsDock }
         Region { item: trayDock }
+        Region { item: launcher }
+        Region { item: scrim }
     }
 
     // 3s "now playing" toast in the notch when the track changes
@@ -89,6 +92,27 @@ PanelWindow {
         onTriggered: {
             if (cc.busy) collapse.restart();
             else win.expanded = false;
+        }
+    }
+
+    // dims the screen while the launcher is open; clicking it closes the launcher
+    Item {
+        id: scrim
+
+        property real dim: LauncherState.open && win.focusedHere ? 1 : 0
+        Behavior on dim { Anim { duration: 250; curve: Theme.standard } }
+
+        width: dim > 0.01 ? win.width : 0
+        height: win.height
+
+        Rectangle {
+            anchors.fill: parent
+            color: "black"
+            opacity: 0.35 * scrim.dim
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: LauncherState.hide()
         }
     }
 
@@ -150,6 +174,13 @@ PanelWindow {
         screenWidth: win.width
         screenHeight: win.height
         active: !win.expanded
+    }
+
+    LauncherDock {
+        id: launcher
+        screenWidth: win.width
+        screenHeight: win.height
+        active: win.focusedHere
     }
 
     // ───────────── the notch ─────────────
@@ -238,9 +269,10 @@ PanelWindow {
                     onClicked: win.view = win.view === "notifs" ? "main" : "notifs"
                     Behavior on opacity { Anim { duration: 250; curve: Theme.standard } }
 
-                    Icon {
+                    InkIcon {
                         text: Notifs.dnd ? "\uf1f6" : "\uf0f3"
-                        font.pixelSize: 13
+                        pixelSize: 13
+                        box: 20
                         color: Notifs.count > 0 && !Notifs.dnd ? Theme.primary : Theme.fg
                     }
                     Label {

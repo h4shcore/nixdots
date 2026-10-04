@@ -56,10 +56,12 @@ Rectangle {
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                 }
-                Icon {
+                InkIcon {
                     anchors.centerIn: parent
                     visible: img.status !== Image.Ready
                     text: "\uf0f3"
+                    pixelSize: 16
+                    box: 28
                     color: Theme.fgDim
                 }
             }
