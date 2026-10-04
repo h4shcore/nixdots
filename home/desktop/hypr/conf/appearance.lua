@@ -1,8 +1,8 @@
 -- https://wiki.hypr.land/Configuring/Basics/Variables/
 hl.config({
     general = {
-        gaps_in = 4,
-        gaps_out = 5,
+        gaps_in = 1,
+        gaps_out = 15,
         gaps_workspaces = 50,
 
         border_size = 1,
