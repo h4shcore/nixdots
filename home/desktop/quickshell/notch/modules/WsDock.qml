@@ -13,8 +13,8 @@ Item {
     required property var screen
     property real screenWidth: 0
 
-    readonly property real e: Theme.earRadius
-    readonly property real t: Theme.border
+    readonly property real e: Look.earRadius
+    readonly property real t: Look.border
     readonly property real r: 18
 
     readonly property var mon: Hyprland.monitorFor(screen)
@@ -67,20 +67,20 @@ Item {
     }
 
     // ── geometry ──
-    readonly property real collapsedW: head.implicitWidth + Theme.pad * 2 + t
-    readonly property real detailW: detail.implicitWidth + Theme.pad * 2 + t
+    readonly property real collapsedW: head.implicitWidth + Look.pad * 2 + t
+    readonly property real detailW: detail.implicitWidth + Look.pad * 2 + t
     property real bodyW: expanded ? Math.max(collapsedW, detailW) : collapsedW
-    property real bodyH: Theme.pillHeight + (expanded ? 46 : 0)
+    property real bodyH: Look.pillHeight + (expanded ? 46 : 0)
 
     Behavior on bodyW { Anim {} }
-    Behavior on bodyH { Anim { curve: root.expanded ? Theme.spring : Theme.emphasized } }
+    Behavior on bodyH { Anim { curve: root.expanded ? Look.spring : Look.emphasized } }
 
     width: bodyW
     height: bodyH
     x: 0
     y: shown ? 0 : -height - 10
 
-    Behavior on y { Anim { duration: Theme.dur.slow } }
+    Behavior on y { Anim { duration: Look.dur.slow } }
 
     Timer {
         id: collapse
@@ -120,7 +120,7 @@ Item {
             readonly property real w: root.width
             readonly property real h: Math.max(root.height, root.t + root.e + root.r)
 
-            fillColor: Theme.surface
+            fillColor: Look.surface
             strokeWidth: -1
 
             startX: 0
@@ -148,14 +148,14 @@ Item {
             id: head
             anchors.horizontalCenter: parent.horizontalCenter
             y: root.t
-            height: Theme.pillHeight - root.t
+            height: Look.pillHeight - root.t
             spacing: 8
 
             InkIcon {
                 text: root.special !== "" ? root.specialInfo(root.special).glyph : "\uf009"
                 pixelSize: 13
                 box: 20
-                color: Theme.primary
+                color: Look.primary
             }
             Label {
                 font.bold: true
@@ -169,10 +169,10 @@ Item {
         RowLayout {
             id: detail
             anchors.horizontalCenter: parent.horizontalCenter
-            y: Theme.pillHeight
+            y: Look.pillHeight
             spacing: 4
             opacity: root.expanded ? 1 : 0
-            Behavior on opacity { Anim { duration: 200; curve: Theme.standard } }
+            Behavior on opacity { Anim { duration: 200; curve: Look.standard } }
 
             Repeater {
                 model: 5
@@ -188,9 +188,9 @@ Item {
                     Layout.preferredWidth: 28
                     Layout.preferredHeight: 28
                     radius: 14
-                    color: on ? Theme.primary : cm.containsMouse ? Theme.surfaceHiest : Theme.surfaceHi
+                    color: on ? Look.primary : cm.containsMouse ? Look.surfaceHiest : Look.surfaceHi
                     border.width: current && !on ? 1 : 0
-                    border.color: Theme.primary
+                    border.color: Look.primary
                     Behavior on color { ColorAnimation { duration: 150 } }
 
                     Label {
@@ -198,7 +198,7 @@ Item {
                         text: cell.wsId
                         font.pixelSize: 12
                         font.bold: cell.on
-                        color: cell.on ? Theme.primaryFg : (root.hasWs(cell.wsId) ? Theme.fg : Theme.fgDim)
+                        color: cell.on ? Look.primaryFg : (root.hasWs(cell.wsId) ? Look.fg : Look.fgDim)
                     }
                     MouseArea {
                         id: cm
@@ -214,7 +214,7 @@ Item {
                 Layout.preferredHeight: 16
                 Layout.leftMargin: 4
                 Layout.rightMargin: 4
-                color: Theme.outline
+                color: Look.outline
             }
 
             Repeater {
@@ -229,7 +229,7 @@ Item {
                     Layout.preferredWidth: 28
                     Layout.preferredHeight: 28
                     radius: 14
-                    color: on ? Theme.primary : sm.containsMouse ? Theme.surfaceHiest : Theme.surfaceHi
+                    color: on ? Look.primary : sm.containsMouse ? Look.surfaceHiest : Look.surfaceHi
                     Behavior on color { ColorAnimation { duration: 150 } }
 
                     InkIcon {
@@ -237,7 +237,7 @@ Item {
                         text: scell.modelData.glyph
                         pixelSize: 13
                         box: 28
-                        color: scell.on ? Theme.primaryFg : (root.hasSpecial(scell.modelData.name) ? Theme.fg : Theme.fgDim)
+                        color: scell.on ? Look.primaryFg : (root.hasSpecial(scell.modelData.name) ? Look.fg : Look.fgDim)
                     }
                     // dot = has windows
                     Rectangle {
@@ -247,7 +247,7 @@ Item {
                         width: 4
                         height: 4
                         radius: 2
-                        color: Theme.primary
+                        color: Look.primary
                         visible: !scell.on && root.hasSpecial(scell.modelData.name)
                     }
                     MouseArea {

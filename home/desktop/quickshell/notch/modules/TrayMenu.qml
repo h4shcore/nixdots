@@ -79,14 +79,14 @@ Item {
                     x: 12
                     width: parent.width - 24
                     height: 1
-                    color: Theme.outline
+                    color: Look.outline
                 }
 
                 Rectangle {
                     anchors.fill: parent
                     visible: !row.modelData.isSeparator
                     radius: 12
-                    color: rowMouse.containsMouse && row.modelData.enabled ? Theme.surfaceHiest : "transparent"
+                    color: rowMouse.containsMouse && row.modelData.enabled ? Look.surfaceHiest : "transparent"
                     opacity: row.modelData.enabled ? 1 : 0.4
                     Behavior on color { ColorAnimation { duration: 120 } }
 
@@ -103,7 +103,7 @@ Item {
                             visible: row.modelData.buttonType !== QsMenuButtonType.None
                             text: row.modelData.checkState === Qt.Checked ? "\uf00c" : ""
                             font.pixelSize: 12
-                            color: Theme.primary
+                            color: Look.primary
                         }
                         IconImage {
                             Layout.preferredWidth: 16
@@ -118,7 +118,7 @@ Item {
                         Icon {
                             visible: row.modelData.hasChildren
                             text: "\uf105"
-                            color: Theme.fgDim
+                            color: Look.fgDim
                         }
                     }
 

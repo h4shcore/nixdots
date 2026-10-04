@@ -15,7 +15,7 @@ Item {
     Behavior on opacity {
         SequentialAnimation {
             PauseAnimation { duration: root.shown ? root.delay : 0 }
-            Anim { duration: 250; curve: Theme.standard }
+            Anim { duration: 250; curve: Look.standard }
         }
     }
     Behavior on scale {

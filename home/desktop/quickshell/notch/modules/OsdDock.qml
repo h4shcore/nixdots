@@ -18,8 +18,8 @@ Item {
     property string kind: "volume"      // volume | brightness
     readonly property bool shown: active && flash
 
-    readonly property real e: Theme.earRadius
-    readonly property real t: Theme.border
+    readonly property real e: Look.earRadius
+    readonly property real t: Look.border
     readonly property real r: 26
     readonly property real value: kind === "volume" ? (Audio.muted ? 0 : Audio.volume) : Brightness.value
     readonly property string glyph: kind === "volume" ? Audio.glyph : "\uf185"
@@ -53,7 +53,7 @@ Item {
     }
 
     property real slide: shown ? 0 : width + e + 20
-    Behavior on slide { Anim { duration: Theme.dur.slow; curve: root.shown ? Theme.spring : Theme.emphasized } }
+    Behavior on slide { Anim { duration: Look.dur.slow; curve: root.shown ? Look.spring : Look.emphasized } }
 
     width: 64 + t
     height: 204
@@ -76,7 +76,7 @@ Item {
             readonly property real w: root.width
             readonly property real h: root.height
 
-            fillColor: Theme.surface
+            fillColor: Look.surface
             strokeWidth: -1
 
             // shape-local y = root-local y + e
@@ -98,7 +98,7 @@ Item {
     component Face: Item {
         property string glyph
         property real value: 0
-        property color col: Theme.fg
+        property color col: Look.fg
 
         Label {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -127,13 +127,13 @@ Item {
         width: root.width - root.t - 20
         height: root.height - 24
         radius: width / 2
-        color: Theme.surfaceHi
+        color: Look.surfaceHi
 
         Face {
             anchors.fill: parent
             glyph: root.glyph
             value: root.value
-            col: Theme.fg
+            col: Look.fg
         }
 
         ClippingRectangle {
@@ -141,8 +141,8 @@ Item {
             width: parent.width
             height: parent.height * Math.min(1, Math.max(0, root.value))
             radius: width / 2
-            color: Theme.primary
-            Behavior on height { Anim { duration: 150; curve: Theme.standard } }
+            color: Look.primary
+            Behavior on height { Anim { duration: 150; curve: Look.standard } }
 
             Face {
                 anchors.bottom: parent.bottom
@@ -150,7 +150,7 @@ Item {
                 height: bar.height
                 glyph: root.glyph
                 value: root.value
-                col: Theme.primaryFg
+                col: Look.primaryFg
             }
         }
     }

@@ -15,13 +15,13 @@ Item {
     required property real screenHeight
     property bool active: true
 
-    readonly property bool open: LauncherState.open && active
+    readonly property bool open: LauncherState.open && LauncherState.mode === "apps" && active
     property string query: ""
     readonly property var results: Apps.search(query)
     readonly property bool empty: results.length === 0
 
-    readonly property real e: Theme.earRadius
-    readonly property real t: Theme.border
+    readonly property real e: Look.earRadius
+    readonly property real t: Look.border
     readonly property real r: 28
     readonly property int rowH: 54
     readonly property int maxRows: 7
@@ -35,7 +35,7 @@ Item {
     property real bodyW: open ? targetW : 240
     property real bodyH: open ? targetH : 0
     Behavior on bodyW { Anim {} }
-    Behavior on bodyH { Anim { curve: root.open ? Theme.spring : Theme.emphasized } }
+    Behavior on bodyH { Anim { curve: root.open ? Look.spring : Look.emphasized } }
 
     function iconFor(entry) {
         const i = entry.icon || "";
@@ -96,7 +96,7 @@ Item {
             readonly property real w: root.width
             readonly property real h: Math.max(root.height, root.r + root.t + root.e)
 
-            fillColor: Theme.surface
+            fillColor: Look.surface
             strokeWidth: -1
 
             // shape-local x = root-local x + e
@@ -133,13 +133,13 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 radius: height / 2
-                color: Theme.surfaceHi
+                color: Look.surfaceHi
 
                 InkIcon {
                     x: 12
                     anchors.verticalCenter: parent.verticalCenter
                     text: "\uf002"
-                    color: Theme.primary
+                    color: Look.primary
                     pixelSize: 16
                     box: 28
                 }
@@ -153,10 +153,10 @@ Item {
                         rightMargin: 80
                         verticalCenter: parent.verticalCenter
                     }
-                    color: Theme.fg
-                    selectionColor: Theme.primary
-                    selectedTextColor: Theme.primaryFg
-                    font.family: Theme.font
+                    color: Look.fg
+                    selectionColor: Look.primary
+                    selectedTextColor: Look.primaryFg
+                    font.family: Look.font
                     font.pixelSize: 15
                     clip: true
                     onTextChanged: root.query = text
@@ -184,7 +184,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: input.text === ""
                     text: "Search apps…"
-                    color: Theme.fgDim
+                    color: Look.fgDim
                     font.pixelSize: 15
                 }
 
@@ -193,7 +193,7 @@ Item {
                     anchors.rightMargin: 20
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.results.length + (root.query === "" ? " apps" : " found")
-                    color: Theme.fgDim
+                    color: Look.fgDim
                     font.pixelSize: 11
                 }
             }
@@ -233,7 +233,7 @@ Item {
                         anchors.fill: parent
                         anchors.margins: 3
                         radius: 18
-                        color: row.current ? Theme.secondaryContainer : "transparent"
+                        color: row.current ? Look.secondaryContainer : "transparent"
                         Behavior on color { ColorAnimation { duration: 120 } }
                     }
 
@@ -250,7 +250,7 @@ Item {
                             Layout.preferredHeight: 34
                             source: root.iconFor(row.modelData.entry)
                             scale: row.current ? 1.08 : 1
-                            Behavior on scale { Anim { duration: Theme.dur.fast } }
+                            Behavior on scale { Anim { duration: Look.dur.fast } }
                         }
 
                         ColumnLayout {
@@ -267,7 +267,7 @@ Item {
                                 Layout.fillWidth: true
                                 visible: text !== ""
                                 text: row.modelData.entry.comment || row.modelData.entry.genericName || ""
-                                color: Theme.fgDim
+                                color: Look.fgDim
                                 font.pixelSize: 11
                             }
                         }
@@ -280,11 +280,11 @@ Item {
                             Icon {
                                 text: "\uf005"
                                 font.pixelSize: 11
-                                color: Theme.primary
+                                color: Look.primary
                             }
                             Label {
                                 text: row.modelData.uses
-                                color: Theme.fgDim
+                                color: Look.fgDim
                                 font.pixelSize: 11
                             }
                         }
@@ -299,7 +299,7 @@ Item {
                 }
 
                 add: Transition {
-                    Anim { property: "opacity"; from: 0; to: 1; duration: 150; curve: Theme.standard }
+                    Anim { property: "opacity"; from: 0; to: 1; duration: 150; curve: Look.standard }
                 }
                 displaced: Transition {
                     Anim { property: "y" }
@@ -313,7 +313,7 @@ Item {
             visible: root.empty
             opacity: root.open ? 1 : 0
             text: root.query === "" ? "No applications found" : "No apps match “" + root.query + "”"
-            color: Theme.fgDim
+            color: Look.fgDim
         }
     }
 }

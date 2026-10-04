@@ -11,19 +11,19 @@ Rectangle {
     implicitWidth: size
     implicitHeight: size
     radius: size / 2
-    color: primary ? Theme.primary : mouse.containsMouse ? Theme.surfaceHiest : "transparent"
+    color: primary ? Look.primary : mouse.containsMouse ? Look.surfaceHiest : "transparent"
     opacity: enabled ? 1 : 0.4
     scale: mouse.pressed ? 0.88 : 1
 
     Behavior on color { ColorAnimation { duration: 150 } }
-    Behavior on scale { Anim { duration: Theme.dur.fast } }
+    Behavior on scale { Anim { duration: Look.dur.fast } }
 
     InkIcon {
         anchors.centerIn: parent
         text: root.glyph
         pixelSize: Math.round(root.size * 0.42)
         box: root.size
-        color: root.primary ? Theme.primaryFg : Theme.fg
+        color: root.primary ? Look.primaryFg : Look.fg
     }
 
     MouseArea {

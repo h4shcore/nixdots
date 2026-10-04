@@ -1,8 +1,8 @@
 import QtQuick
 
 NumberAnimation {
-    property var curve: Theme.spring
-    duration: Theme.dur.normal
+    property var curve: Look.spring
+    duration: Look.dur.normal
     easing.type: Easing.BezierSpline
     easing.bezierCurve: curve
 }

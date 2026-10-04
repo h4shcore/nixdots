@@ -15,8 +15,8 @@ Item {
 
     readonly property real cardW: 340
     readonly property bool shown: active && Notifs.popups.length > 0
-    readonly property real e: Theme.earRadius
-    readonly property real t: Theme.border
+    readonly property real e: Look.earRadius
+    readonly property real t: Look.border
     readonly property real r: 20
 
     property real boxH: 0
@@ -31,7 +31,7 @@ Item {
         restoreMode: Binding.RestoreNone
     }
     Behavior on boxH { Anim {} }
-    Behavior on slide { Anim { duration: Theme.dur.slow; curve: root.shown ? Theme.spring : Theme.emphasized } }
+    Behavior on slide { Anim { duration: Look.dur.slow; curve: root.shown ? Look.spring : Look.emphasized } }
 
     width: cardW + t + 20
     height: Math.max(boxH, r + t + e + 20)
@@ -54,7 +54,7 @@ Item {
             readonly property real w: root.width
             readonly property real h: root.height
 
-            fillColor: Theme.surface
+            fillColor: Look.surface
             strokeWidth: -1
 
             // shape-local = root-local + (e, e)
@@ -90,14 +90,14 @@ Item {
 
         add: Transition {
             ParallelAnimation {
-                Anim { property: "opacity"; from: 0; to: 1; curve: Theme.standard; duration: 200 }
+                Anim { property: "opacity"; from: 0; to: 1; curve: Look.standard; duration: 200 }
                 Anim { property: "scale"; from: 0.9; to: 1 }
             }
         }
         remove: Transition {
             ParallelAnimation {
-                Anim { property: "opacity"; to: 0; curve: Theme.standard; duration: 200 }
-                Anim { property: "scale"; to: 0.9; curve: Theme.standard; duration: 200 }
+                Anim { property: "opacity"; to: 0; curve: Look.standard; duration: 200 }
+                Anim { property: "scale"; to: 0.9; curve: Look.standard; duration: 200 }
             }
         }
         displaced: Transition {

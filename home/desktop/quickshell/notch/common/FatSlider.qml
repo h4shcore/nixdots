@@ -17,13 +17,13 @@ Item {
     property real shownFill: width * Math.min(1, Math.max(0, value))
     Behavior on shownFill {
         enabled: !area.pressed
-        Anim { duration: 150; curve: Theme.standard }
+        Anim { duration: 150; curve: Look.standard }
     }
 
     component Face: Item {
         property string glyph
         property real value: 0
-        property color col: Theme.fg
+        property color col: Look.fg
 
         InkIcon {
             x: 12
@@ -47,7 +47,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: height / 2
-        color: Theme.surfaceHi
+        color: Look.surfaceHi
     }
 
     Face {
@@ -55,21 +55,21 @@ Item {
         height: root.height
         glyph: root.glyph
         value: root.value
-        col: Theme.fg
+        col: Look.fg
     }
 
     ClippingRectangle {
         width: root.shownFill
         height: parent.height
         radius: height / 2
-        color: Theme.primary
+        color: Look.primary
 
         Face {
             width: root.width
             height: root.height
             glyph: root.glyph
             value: root.value
-            col: Theme.primaryFg
+            col: Look.primaryFg
         }
     }
 

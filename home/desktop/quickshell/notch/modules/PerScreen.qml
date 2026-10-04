@@ -8,8 +8,8 @@ Scope {
 
     Bar { screen: root.modelData }
 
-    Exclusion { screen: root.modelData; edge: "top"; size: Theme.reserveTop }
-    Exclusion { screen: root.modelData; edge: "bottom"; size: Theme.border }
-    Exclusion { screen: root.modelData; edge: "left"; size: Theme.border }
-    Exclusion { screen: root.modelData; edge: "right"; size: Theme.border }
+    Exclusion { screen: root.modelData; edge: "top"; size: Look.reserveTop }
+    Exclusion { screen: root.modelData; edge: "bottom"; size: Look.border }
+    Exclusion { screen: root.modelData; edge: "left"; size: Look.border }
+    Exclusion { screen: root.modelData; edge: "right"; size: Look.border }
 }

@@ -12,11 +12,11 @@ Rectangle {
 
     implicitHeight: 52
     radius: 18
-    color: on ? Theme.primary : mouse.containsMouse ? Theme.surfaceHiest : Theme.surfaceHi
+    color: on ? Look.primary : mouse.containsMouse ? Look.surfaceHiest : Look.surfaceHi
     scale: mouse.pressed ? 0.95 : 1
 
     Behavior on color { ColorAnimation { duration: 200 } }
-    Behavior on scale { Anim { duration: Theme.dur.fast } }
+    Behavior on scale { Anim { duration: Look.dur.fast } }
 
     RowLayout {
         anchors {
@@ -30,7 +30,7 @@ Rectangle {
             text: root.glyph
             pixelSize: 17
             box: 26
-            color: root.on ? Theme.primaryFg : Theme.fg
+            color: root.on ? Look.primaryFg : Look.fg
         }
         ColumnLayout {
             Layout.fillWidth: true
@@ -41,13 +41,13 @@ Rectangle {
                 text: root.title
                 font.bold: true
                 font.pixelSize: 12
-                color: root.on ? Theme.primaryFg : Theme.fg
+                color: root.on ? Look.primaryFg : Look.fg
             }
             Label {
                 Layout.fillWidth: true
                 text: root.subtitle
                 font.pixelSize: 11
-                color: root.on ? Theme.primaryFg : Theme.fgDim
+                color: root.on ? Look.primaryFg : Look.fgDim
             }
         }
     }

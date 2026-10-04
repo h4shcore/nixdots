@@ -18,7 +18,7 @@ RowLayout {
     }
     Label {
         text: Qt.formatDateTime(clock.date, "ddd d MMM")
-        color: Theme.fgDim
+        color: Look.fgDim
         font.pixelSize: 13
     }
 }

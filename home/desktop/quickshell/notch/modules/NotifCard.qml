@@ -14,9 +14,9 @@ Rectangle {
 
     implicitHeight: col.implicitHeight + 24
     radius: 20
-    color: Theme.surfaceHi
+    color: Look.surfaceHi
     border.width: entry?.critical ? 1 : 0
-    border.color: Theme.error
+    border.color: Look.error
 
     // left click: tuck popup away into the tray, right click: dismiss
     MouseArea {
@@ -47,7 +47,7 @@ Rectangle {
                 Layout.preferredHeight: 40
                 Layout.alignment: Qt.AlignTop
                 radius: 12
-                color: Theme.surfaceHiest
+                color: Look.surfaceHiest
 
                 Image {
                     id: img
@@ -62,7 +62,7 @@ Rectangle {
                     text: "\uf0f3"
                     pixelSize: 16
                     box: 28
-                    color: Theme.fgDim
+                    color: Look.fgDim
                 }
             }
 
@@ -73,7 +73,7 @@ Rectangle {
                 Label {
                     Layout.fillWidth: true
                     text: root.n?.appName ?? ""
-                    color: Theme.fgDim
+                    color: Look.fgDim
                     font.pixelSize: 11
                 }
                 Label {
@@ -88,7 +88,7 @@ Rectangle {
                     visible: text !== ""
                     text: root.n?.body ?? ""
                     textFormat: Text.StyledText
-                    color: Theme.fgDim
+                    color: Look.fgDim
                     wrapMode: Text.Wrap
                     maximumLineCount: 4
                 }
@@ -116,7 +116,7 @@ Rectangle {
                     implicitWidth: lbl.implicitWidth + 24
                     implicitHeight: 28
                     radius: 14
-                    color: bm.containsMouse ? Theme.secondaryContainer : Theme.surfaceHiest
+                    color: bm.containsMouse ? Look.secondaryContainer : Look.surfaceHiest
                     Behavior on color { ColorAnimation { duration: 150 } }
 
                     Label {

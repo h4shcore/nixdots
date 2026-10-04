@@ -22,7 +22,7 @@ ClippingRectangle {
 
     implicitHeight: col.implicitHeight + 32
     radius: 24
-    color: Theme.surfaceHi
+    color: Look.surfaceHi
 
     // position isn't pushed by MPRIS, so poke it while playing and visible
     Timer {
@@ -52,18 +52,18 @@ ClippingRectangle {
         saturation: 0.4
         brightness: -0.1
         opacity: bgSrc.status === Image.Ready ? 1 : 0
-        Behavior on opacity { Anim { duration: 400; curve: Theme.standard } }
+        Behavior on opacity { Anim { duration: 400; curve: Look.standard } }
     }
     Rectangle {
         anchors.fill: parent
-        color: Theme.surfaceHi
+        color: Look.surfaceHi
         opacity: 0.6
     }
 
     // pop + fade whenever the track changes
     ParallelAnimation {
         id: trackAnim
-        Anim { target: info; property: "opacity"; from: 0; to: 1; duration: 300; curve: Theme.standard }
+        Anim { target: info; property: "opacity"; from: 0; to: 1; duration: 300; curve: Look.standard }
         Anim { target: infoShift; property: "y"; from: 8; to: 0 }
         Anim { target: tile; property: "scale"; from: 0.82; to: 1 }
     }
@@ -92,7 +92,7 @@ ClippingRectangle {
                 Layout.preferredWidth: 88
                 Layout.preferredHeight: 88
                 radius: 22
-                color: Theme.surfaceHiest
+                color: Look.surfaceHiest
                 scale: root.playing ? 1 : 0.92
                 Behavior on scale { Anim {} }
 
@@ -104,14 +104,14 @@ ClippingRectangle {
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     opacity: status === Image.Ready ? 1 : 0
-                    Behavior on opacity { Anim { duration: 300; curve: Theme.standard } }
+                    Behavior on opacity { Anim { duration: 300; curve: Look.standard } }
                 }
                 Icon {
                     anchors.centerIn: parent
                     visible: art.status !== Image.Ready
                     text: "\uf001"
                     font.pixelSize: 30
-                    color: Theme.fgDim
+                    color: Look.fgDim
                 }
             }
 
@@ -141,7 +141,7 @@ ClippingRectangle {
                                     width: 3
                                     height: 4
                                     radius: 1.5
-                                    color: Theme.primary
+                                    color: Look.primary
 
                                     SequentialAnimation {
                                         running: root.playing
@@ -157,7 +157,7 @@ ClippingRectangle {
                     Label {
                         Layout.fillWidth: true
                         text: (root.p?.identity ?? "").toUpperCase()
-                        color: Theme.primary
+                        color: Look.primary
                         font.pixelSize: 10
                         font.bold: true
                         font.letterSpacing: 1
@@ -175,7 +175,7 @@ ClippingRectangle {
                 Label {
                     Layout.fillWidth: true
                     text: root.p?.trackArtist ?? ""
-                    color: Theme.fgDim
+                    color: Look.fgDim
                     font.pixelSize: 13
                 }
             }
@@ -199,13 +199,13 @@ ClippingRectangle {
 
                 Label {
                     text: root.fmt(root.p?.position)
-                    color: Theme.fgDim
+                    color: Look.fgDim
                     font.pixelSize: 11
                 }
                 Item { Layout.fillWidth: true }
                 Label {
                     text: root.fmt(root.p?.length)
-                    color: Theme.fgDim
+                    color: Look.fgDim
                     font.pixelSize: 11
                 }
             }
@@ -229,18 +229,18 @@ ClippingRectangle {
                 Layout.preferredWidth: 64
                 Layout.preferredHeight: 48
                 radius: root.playing ? 16 : 24
-                color: Theme.primary
+                color: Look.primary
                 opacity: enabled ? 1 : 0.4
                 enabled: root.p?.canTogglePlaying ?? false
                 scale: playMouse.pressed ? 0.92 : 1
 
                 Behavior on radius { Anim {} }
-                Behavior on scale { Anim { duration: Theme.dur.fast } }
+                Behavior on scale { Anim { duration: Look.dur.fast } }
 
                 Icon {
                     anchors.centerIn: parent
                     text: root.playing ? "\uf04c" : "\uf04b"
-                    color: Theme.primaryFg
+                    color: Look.primaryFg
                     font.pixelSize: 18
                 }
                 MouseArea {

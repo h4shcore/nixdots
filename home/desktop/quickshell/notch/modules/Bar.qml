@@ -34,17 +34,17 @@ PanelWindow {
     readonly property Item cur: expanded ? (view === "notifs" ? notifPanel : cc) : (songShown ? songToast : null)
 
     // notch geometry
-    readonly property real pillW: clock.implicitWidth + Theme.pad * 2
-    readonly property real targetW: Math.max(pillW, cur ? cur.implicitWidth + Theme.pad * 2 : 0)
-    readonly property real targetH: songShowing ? Theme.border + 10 + songToast.implicitHeight + 12
-                                                 : Theme.pillHeight + (cur ? cur.implicitHeight + Theme.pad : 0)
+    readonly property real pillW: clock.implicitWidth + Look.pad * 2
+    readonly property real targetW: Math.max(pillW, cur ? cur.implicitWidth + Look.pad * 2 : 0)
+    readonly property real targetH: songShowing ? Look.border + 10 + songToast.implicitHeight + 12
+                                                 : Look.pillHeight + (cur ? cur.implicitHeight + Look.pad : 0)
     property real bodyW: targetW
     property real bodyH: targetH
-    property real bodyR: cur ? 24 : Theme.notchRadius
+    property real bodyR: cur ? 24 : Look.notchRadius
 
     Behavior on bodyW { Anim {} }
-    Behavior on bodyH { Anim { curve: win.cur ? Theme.spring : Theme.emphasized } }
-    Behavior on bodyR { Anim { duration: 200; curve: Theme.standard } }
+    Behavior on bodyH { Anim { curve: win.cur ? Look.spring : Look.emphasized } }
+    Behavior on bodyR { Anim { duration: 200; curve: Look.standard } }
 
     anchors {
         top: true
@@ -63,6 +63,7 @@ PanelWindow {
         Region { item: wsDock }
         Region { item: trayDock }
         Region { item: launcher }
+        Region { item: wallDock }
         Region { item: scrim }
     }
 
@@ -100,7 +101,7 @@ PanelWindow {
         id: scrim
 
         property real dim: LauncherState.open && win.focusedHere ? 1 : 0
-        Behavior on dim { Anim { duration: 250; curve: Theme.standard } }
+        Behavior on dim { Anim { duration: 250; curve: Look.standard } }
 
         width: dim > 0.01 ? win.width : 0
         height: win.height
@@ -124,13 +125,13 @@ PanelWindow {
         ShapePath {
             id: frame
 
-            readonly property real t: Theme.border
-            readonly property real r: Theme.borderRadius
+            readonly property real t: Look.border
+            readonly property real r: Look.borderRadius
             readonly property real w: win.width
             readonly property real h: win.height
 
             fillRule: ShapePath.OddEvenFill
-            fillColor: Theme.surface
+            fillColor: Look.surface
             strokeWidth: -1
 
             startX: 0
@@ -183,6 +184,13 @@ PanelWindow {
         active: win.focusedHere
     }
 
+    WallpaperDock {
+        id: wallDock
+        screenWidth: win.width
+        screenHeight: win.height
+        active: win.focusedHere
+    }
+
     // ───────────── the notch ─────────────
     Item {
         id: notch
@@ -192,7 +200,7 @@ PanelWindow {
         width: win.bodyW
         height: win.bodyH
 
-        Behavior on y { Anim { duration: Theme.dur.slow } }
+        Behavior on y { Anim { duration: Look.dur.slow } }
 
         HoverHandler {
             id: hover
@@ -208,21 +216,21 @@ PanelWindow {
 
         // body shape with concave "ears" that blend into the top border
         Shape {
-            x: -Theme.earRadius
-            width: notch.width + Theme.earRadius * 2
+            x: -Look.earRadius
+            width: notch.width + Look.earRadius * 2
             height: notch.height
             preferredRendererType: Shape.CurveRenderer
 
             ShapePath {
                 id: body
 
-                readonly property real e: Theme.earRadius
-                readonly property real t: Theme.border
+                readonly property real e: Look.earRadius
+                readonly property real t: Look.border
                 readonly property real r: win.bodyR
                 readonly property real w: notch.width
                 readonly property real h: notch.height
 
-                fillColor: Theme.surface
+                fillColor: Look.surface
                 strokeWidth: -1
 
                 startX: 0
@@ -247,39 +255,39 @@ PanelWindow {
             // header row: clock + notification bell
             Item {
                 width: parent.width
-                y: Theme.border
-                height: Theme.pillHeight - Theme.border
+                y: Look.border
+                height: Look.pillHeight - Look.border
 
                 Clock {
                     id: clock
                     anchors.centerIn: parent
                     opacity: win.songShowing ? 0 : 1
                     scale: win.songShowing ? 0.9 : 1
-                    Behavior on opacity { Anim { duration: 200; curve: Theme.standard } }
-                    Behavior on scale { Anim { duration: 200; curve: Theme.standard } }
+                    Behavior on opacity { Anim { duration: 200; curve: Look.standard } }
+                    Behavior on scale { Anim { duration: 200; curve: Look.standard } }
                 }
 
                 Chip {
                     anchors.right: parent.right
-                    anchors.rightMargin: Theme.pad - 6
+                    anchors.rightMargin: Look.pad - 6
                     anchors.verticalCenter: parent.verticalCenter
                     opacity: win.expanded ? 1 : 0
                     enabled: win.expanded
                     active: win.view === "notifs"
                     onClicked: win.view = win.view === "notifs" ? "main" : "notifs"
-                    Behavior on opacity { Anim { duration: 250; curve: Theme.standard } }
+                    Behavior on opacity { Anim { duration: 250; curve: Look.standard } }
 
                     InkIcon {
                         text: Notifs.dnd ? "\uf1f6" : "\uf0f3"
                         pixelSize: 13
                         box: 20
-                        color: Notifs.count > 0 && !Notifs.dnd ? Theme.primary : Theme.fg
+                        color: Notifs.count > 0 && !Notifs.dnd ? Look.primary : Look.fg
                     }
                     Label {
                         visible: Notifs.count > 0
                         text: Notifs.count
                         font.pixelSize: 12
-                        color: Theme.primary
+                        color: Look.primary
                     }
                 }
             }
@@ -287,32 +295,32 @@ PanelWindow {
             ControlCenter {
                 id: cc
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: Theme.pillHeight
+                y: Look.pillHeight
                 width: implicitWidth
                 shown: win.expanded && win.view === "main"
                 opacity: shown ? 1 : 0
                 visible: opacity > 0
-                Behavior on opacity { Anim { duration: 200; curve: Theme.standard } }
+                Behavior on opacity { Anim { duration: 200; curve: Look.standard } }
             }
 
             SongToast {
                 id: songToast
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: Theme.border + 10
+                y: Look.border + 10
                 width: implicitWidth
                 opacity: !win.expanded && win.songShown ? 1 : 0
                 visible: opacity > 0
-                Behavior on opacity { Anim { duration: 250; curve: Theme.standard } }
+                Behavior on opacity { Anim { duration: 250; curve: Look.standard } }
             }
 
             NotifPanel {
                 id: notifPanel
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: Theme.pillHeight
+                y: Look.pillHeight
                 width: implicitWidth
                 opacity: win.expanded && win.view === "notifs" ? 1 : 0
                 visible: opacity > 0
-                Behavior on opacity { Anim { duration: 200; curve: Theme.standard } }
+                Behavior on opacity { Anim { duration: 200; curve: Look.standard } }
             }
         }
     }

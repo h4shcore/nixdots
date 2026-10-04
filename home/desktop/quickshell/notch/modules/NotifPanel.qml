@@ -45,7 +45,7 @@ Item {
             Layout.bottomMargin: 12
             visible: Notifs.count === 0
             text: "All caught up"
-            color: Theme.fgDim
+            color: Look.fgDim
         }
 
         ListView {
@@ -66,8 +66,8 @@ Item {
 
             remove: Transition {
                 ParallelAnimation {
-                    Anim { property: "opacity"; to: 0; curve: Theme.standard; duration: 200 }
-                    Anim { property: "x"; to: 80; curve: Theme.standard; duration: 200 }
+                    Anim { property: "opacity"; to: 0; curve: Look.standard; duration: 200 }
+                    Anim { property: "x"; to: 80; curve: Look.standard; duration: 200 }
                 }
             }
             displaced: Transition {

@@ -4,7 +4,7 @@ Item {
     id: root
 
     property real value: 0
-    property color fill: Theme.primary
+    property color fill: Look.primary
     readonly property bool pressed: area.pressed
     signal moved(real value)
 
@@ -17,9 +17,9 @@ Item {
         width: parent.width
         height: area.pressed ? 14 : 8
         radius: height / 2
-        color: Theme.surfaceHiest
+        color: Look.surfaceHiest
 
-        Behavior on height { Anim { duration: Theme.dur.fast } }
+        Behavior on height { Anim { duration: Look.dur.fast } }
 
         Rectangle {
             width: Math.max(parent.height, parent.width * Math.min(1, Math.max(0, root.value)))
@@ -29,7 +29,7 @@ Item {
 
             Behavior on width {
                 enabled: !area.pressed
-                Anim { duration: 150; curve: Theme.standard }
+                Anim { duration: 150; curve: Look.standard }
             }
         }
     }

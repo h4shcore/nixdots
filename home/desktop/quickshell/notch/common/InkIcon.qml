@@ -7,7 +7,7 @@ Item {
     id: root
 
     property string text
-    property color color: Theme.fg
+    property color color: Look.fg
     property int pixelSize: 18
     property int box: 28
     property string family: "Symbols Nerd Font Mono"   // falls back to any font that has the glyph
@@ -21,7 +21,7 @@ Item {
         id: it
 
         property string text
-        property color color: Theme.fg
+        property color color: Look.fg
         property int size: 18
         property int box: 28
         property string family
@@ -78,9 +78,9 @@ Item {
 
     ParallelAnimation {
         id: swap
-        Anim { target: back; property: "opacity"; from: 1; to: 0; duration: 180; curve: Theme.standard }
-        Anim { target: back; property: "scale"; from: 1; to: 0.6; duration: 180; curve: Theme.standard }
-        Anim { target: front; property: "opacity"; from: 0; to: 1; duration: 220; curve: Theme.standard }
+        Anim { target: back; property: "opacity"; from: 1; to: 0; duration: 180; curve: Look.standard }
+        Anim { target: back; property: "scale"; from: 1; to: 0.6; duration: 180; curve: Look.standard }
+        Anim { target: front; property: "opacity"; from: 0; to: 1; duration: 220; curve: Look.standard }
         Anim { target: front; property: "scale"; from: 0.6; to: 1 }
     }
 }

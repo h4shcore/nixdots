@@ -13,13 +13,13 @@ Rectangle {
     signal scrolled(var wheel)
 
     implicitWidth: holder.implicitWidth + 20
-    implicitHeight: Theme.pillHeight - 10
+    implicitHeight: Look.pillHeight - 10
     radius: height / 2
-    color: active ? Theme.secondaryContainer : mouse.containsMouse ? Theme.surfaceHiest : "transparent"
+    color: active ? Look.secondaryContainer : mouse.containsMouse ? Look.surfaceHiest : "transparent"
     scale: mouse.pressed ? 0.94 : 1
 
     Behavior on color { ColorAnimation { duration: 150 } }
-    Behavior on scale { Anim { duration: Theme.dur.fast } }
+    Behavior on scale { Anim { duration: Look.dur.fast } }
 
     RowLayout {
         id: holder

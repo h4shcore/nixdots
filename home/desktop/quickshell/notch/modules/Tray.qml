@@ -52,7 +52,7 @@ Row {
             Rectangle {
                 anchors.fill: parent
                 radius: 10
-                color: item.containsMouse ? Theme.surfaceHiest : "transparent"
+                color: item.containsMouse ? Look.surfaceHiest : "transparent"
                 Behavior on color { ColorAnimation { duration: 150 } }
             }
 
@@ -62,7 +62,7 @@ Row {
                 height: root.iconSize
                 source: item.modelData.icon
                 scale: item.containsMouse ? 1.15 : 1
-                Behavior on scale { Anim { duration: Theme.dur.fast } }
+                Behavior on scale { Anim { duration: Look.dur.fast } }
             }
         }
     }

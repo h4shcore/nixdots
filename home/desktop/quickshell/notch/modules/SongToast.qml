@@ -23,7 +23,7 @@ Item {
             Layout.preferredWidth: 52
             Layout.preferredHeight: 52
             radius: 14
-            color: Theme.surfaceHi
+            color: Look.surfaceHi
 
             Image {
                 id: art
@@ -33,14 +33,14 @@ Item {
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 opacity: status === Image.Ready ? 1 : 0
-                Behavior on opacity { Anim { duration: 250; curve: Theme.standard } }
+                Behavior on opacity { Anim { duration: 250; curve: Look.standard } }
             }
             Icon {
                 anchors.centerIn: parent
                 visible: art.status !== Image.Ready
                 text: "\uf001"
                 font.pixelSize: 20
-                color: Theme.fgDim
+                color: Look.fgDim
             }
         }
 
@@ -51,7 +51,7 @@ Item {
             Label {
                 Layout.fillWidth: true
                 text: "NOW PLAYING"
-                color: Theme.primary
+                color: Look.primary
                 font.pixelSize: 10
                 font.bold: true
                 font.letterSpacing: 1
@@ -65,7 +65,7 @@ Item {
             Label {
                 Layout.fillWidth: true
                 text: root.p?.trackArtist ?? ""
-                color: Theme.fgDim
+                color: Look.fgDim
                 font.pixelSize: 12
             }
         }

@@ -18,4 +18,16 @@ ShellRoot {
         function show(): void { LauncherState.show(); }
         function hide(): void { LauncherState.hide(); }
     }
+
+    // qs -c notch ipc call wallpaper toggle
+    IpcHandler {
+        target: "wallpaper"
+
+        function toggle(): void { LauncherState.toggleMode("wall"); }
+        function show(): void {
+            LauncherState.mode = "wall";
+            LauncherState.open = true;
+        }
+        function hide(): void { LauncherState.hide(); }
+    }
 }
