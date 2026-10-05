@@ -64,6 +64,7 @@ PanelWindow {
         Region { item: trayDock }
         Region { item: launcher }
         Region { item: wallDock }
+        Region { item: clipDock }
         Region { item: scrim }
     }
 
@@ -179,6 +180,13 @@ PanelWindow {
 
     LauncherDock {
         id: launcher
+        screenWidth: win.width
+        screenHeight: win.height
+        active: win.focusedHere
+    }
+
+    ClipboardDock {
+        id: clipDock
         screenWidth: win.width
         screenHeight: win.height
         active: win.focusedHere

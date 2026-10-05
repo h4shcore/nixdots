@@ -19,6 +19,18 @@ ShellRoot {
         function hide(): void { LauncherState.hide(); }
     }
 
+    // qs -c notch ipc call clipboard toggle
+    IpcHandler {
+        target: "clipboard"
+
+        function toggle(): void { LauncherState.toggleMode("clip"); }
+        function show(): void {
+            LauncherState.mode = "clip";
+            LauncherState.open = true;
+        }
+        function hide(): void { LauncherState.hide(); }
+    }
+
     // qs -c notch ipc call wallpaper toggle
     IpcHandler {
         target: "wallpaper"

@@ -6,8 +6,9 @@ import Quickshell.Widgets
 import qs.common
 import qs.services
 
-// App launcher growing out of the bottom border (centered).
-// Type to search, Up/Down (or Ctrl+J/K, Tab) to move, Enter to launch, Esc to close.
+// Clipboard history growing out of the bottom border.
+// Type to search · Up/Down (Tab, Ctrl+J/K) move · Enter copy · Shift+Enter copy + paste
+// Ctrl+D delete · Alt+P pin · Esc close
 Item {
     id: root
 
@@ -15,10 +16,11 @@ Item {
     required property real screenHeight
     property bool active: true
 
-    readonly property bool open: LauncherState.open && LauncherState.mode === "apps" && active
+    readonly property bool open: LauncherState.open && LauncherState.mode === "clip" && active
     property string query: ""
-    readonly property var results: Apps.search(query)
+    readonly property var results: Clip.search(query)
     readonly property bool empty: results.length === 0
+    property bool confirmClear: false
 
     readonly property real e: Look.earRadius
     readonly property real t: Look.border
@@ -26,10 +28,8 @@ Item {
     readonly property int rowH: 54
     readonly property int maxRows: 7
     readonly property real listH: Math.min(results.length, maxRows) * rowH
-    readonly property real listShown: listH
-
     readonly property real targetW: 620
-    readonly property real targetH: 14 + 46 + 10 + (empty ? 44 : listShown) + 14 + t
+    readonly property real targetH: 14 + 46 + 10 + (empty ? 56 : listH) + 14 + t
 
     property real bodyW: open ? targetW : 240
     property real bodyH: open ? targetH : 0
@@ -49,20 +49,27 @@ Item {
         onTriggered: root.settled = true
     }
 
-    function iconFor(entry) {
-        const i = entry.icon || "";
-        if (i.startsWith("/")) return "file://" + i;
-        return Quickshell.iconPath(i, "application-x-executable");
+    function label(r) {
+        if (!r.isImage) return r.preview;
+        const m = /\[\[ binary data (\S+ \S+) (\w+) (\d+x\d+) \]\]/.exec(r.preview);
+        return m ? m[2].toUpperCase() + " image  ·  " + m[3] + "  ·  " + m[1] : "Image";
     }
 
-    function launch(entry) {
-        Apps.launch(entry);
+    function current() { return root.results[lv.currentIndex]; }
+
+    function copyCurrent(paste) {
+        const r = current();
+        if (!r) return;
+        Clip.copy(r.id, paste);
         LauncherState.hide();
     }
-
-    function launchCurrent() {
-        const r = root.results[lv.currentIndex];
-        if (r) root.launch(r.entry);
+    function removeCurrent() {
+        const r = current();
+        if (r) Clip.remove(r.id);
+    }
+    function pinCurrent() {
+        const r = current();
+        if (r) Clip.togglePin(r.id);
     }
 
     function move(delta) {
@@ -74,7 +81,9 @@ Item {
     onOpenChanged: {
         settled = false;
         settleTimer.restart();
+        confirmClear = false;
         if (open) {
+            Clip.refresh();
             input.text = "";
             lv.currentIndex = 0;
             focusTimer.restart();
@@ -86,6 +95,11 @@ Item {
         id: focusTimer
         interval: 60
         onTriggered: input.forceActiveFocus()
+    }
+    Timer {
+        id: confirmTimer
+        interval: 3000
+        onTriggered: root.confirmClear = false
     }
 
     width: bodyW
@@ -152,7 +166,7 @@ Item {
                 InkIcon {
                     x: 12
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "\uf002"
+                    text: "\uf0ea"
                     color: Look.primary
                     pixelSize: 16
                     box: 28
@@ -164,7 +178,7 @@ Item {
                         left: parent.left
                         leftMargin: 50
                         right: parent.right
-                        rightMargin: 80
+                        rightMargin: 120
                         verticalCenter: parent.verticalCenter
                     }
                     color: Look.fg
@@ -177,6 +191,8 @@ Item {
 
                     Keys.onPressed: ev => {
                         const ctrl = ev.modifiers & Qt.ControlModifier;
+                        const alt = ev.modifiers & Qt.AltModifier;
+                        const shift = ev.modifiers & Qt.ShiftModifier;
                         if (ev.key === Qt.Key_Down || ev.key === Qt.Key_Tab || (ctrl && ev.key === Qt.Key_J) || (ctrl && ev.key === Qt.Key_N)) {
                             root.move(1);
                             ev.accepted = true;
@@ -184,7 +200,13 @@ Item {
                             root.move(-1);
                             ev.accepted = true;
                         } else if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) {
-                            root.launchCurrent();
+                            root.copyCurrent(!!shift);
+                            ev.accepted = true;
+                        } else if (ctrl && ev.key === Qt.Key_D) {
+                            root.removeCurrent();
+                            ev.accepted = true;
+                        } else if (alt && ev.key === Qt.Key_P) {
+                            root.pinCurrent();
                             ev.accepted = true;
                         } else if (ev.key === Qt.Key_Escape) {
                             LauncherState.hide();
@@ -197,28 +219,47 @@ Item {
                     anchors.left: input.left
                     anchors.verticalCenter: parent.verticalCenter
                     visible: input.text === ""
-                    text: "Search apps…"
+                    text: "Search clipboard…"
                     color: Look.fgDim
                     font.pixelSize: 15
                 }
 
                 Label {
-                    anchors.right: parent.right
-                    anchors.rightMargin: 20
+                    anchors.right: clearBtn.left
+                    anchors.rightMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
-                    text: root.results.length + (root.query === "" ? " apps" : " found")
-                    color: Look.fgDim
+                    text: root.confirmClear ? "Clear all?" : root.results.length + (root.query === "" ? " items" : " found")
+                    color: root.confirmClear ? Look.primary : Look.fgDim
                     font.pixelSize: 11
+                }
+
+                IconButton {
+                    id: clearBtn
+                    anchors.right: parent.right
+                    anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    size: 32
+                    primary: root.confirmClear
+                    glyph: "\uf1f8"
+                    onClicked: {
+                        if (root.confirmClear) {
+                            Clip.wipe();
+                            root.confirmClear = false;
+                        } else {
+                            root.confirmClear = true;
+                            confirmTimer.restart();
+                        }
+                    }
                 }
             }
         }
 
-        // results
+        // history list
         Reveal {
             x: 14
             y: 14 + 46 + 10
             width: parent.width - 28
-            height: root.listShown
+            height: root.listH
             visible: !root.empty
             shown: root.open
             delay: 70
@@ -239,6 +280,7 @@ Item {
                     required property var modelData
                     required property int index
                     readonly property bool current: ListView.isCurrentItem
+                    readonly property bool hot: current || rowMouse.containsMouse
 
                     width: ListView.view.width
                     height: root.rowH
@@ -251,76 +293,87 @@ Item {
                         Behavior on color { ColorAnimation { duration: 120 } }
                     }
 
+                    MouseArea {
+                        id: rowMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onPositionChanged: lv.currentIndex = row.index
+                        onClicked: {
+                            lv.currentIndex = row.index;
+                            root.copyCurrent(false);
+                        }
+                    }
+
                     RowLayout {
                         anchors {
                             fill: parent
                             leftMargin: 16
-                            rightMargin: 16
+                            rightMargin: 12
                         }
                         spacing: 12
 
-                        IconImage {
-                            Layout.preferredWidth: 34
+                        // image thumbnail, or a text glyph
+                        ClippingRectangle {
+                            Layout.preferredWidth: 46
                             Layout.preferredHeight: 34
-                            source: root.iconFor(row.modelData.entry)
-                            scale: row.current ? 1.08 : 1
-                            Behavior on scale { Anim { duration: Look.dur.fast } }
+                            radius: 10
+                            color: Look.surfaceHiest
+
+                            Image {
+                                anchors.fill: parent
+                                visible: row.modelData.isImage
+                                source: row.modelData.isImage ? Clip.thumbUrl(row.modelData.id) : ""
+                                sourceSize: Qt.size(120, 90)
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                            }
+                            InkIcon {
+                                anchors.centerIn: parent
+                                visible: !row.modelData.isImage
+                                text: "\uf15c"
+                                color: Look.fgDim
+                                pixelSize: 15
+                                box: 28
+                            }
                         }
 
-                        ColumnLayout {
+                        Label {
                             Layout.fillWidth: true
-                            spacing: 0
-
-                            Label {
-                                Layout.fillWidth: true
-                                text: row.modelData.entry.name
-                                font.bold: true
-                                font.pixelSize: 14
-                            }
-                            Label {
-                                Layout.fillWidth: true
-                                visible: text !== ""
-                                text: row.modelData.entry.comment || row.modelData.entry.genericName || ""
-                                color: Look.fgDim
-                                font.pixelSize: 11
-                            }
+                            text: root.label(row.modelData)
+                            font.pixelSize: 13
+                            font.family: row.modelData.isImage ? Look.font : "monospace"
                         }
 
-                        // frequently used marker
-                        RowLayout {
-                            visible: row.modelData.uses >= 2
-                            spacing: 5
-
-                            Icon {
-                                text: "\uf005"
-                                font.pixelSize: 11
-                                color: Look.primary
-                            }
-                            Label {
-                                text: row.modelData.uses
-                                color: Look.fgDim
-                                font.pixelSize: 11
-                            }
+                        IconButton {
+                            size: 28
+                            glyph: "\uf005"
+                            primary: row.modelData.pinned
+                            opacity: row.modelData.pinned || row.hot ? 1 : 0
+                            enabled: opacity > 0
+                            Behavior on opacity { Anim { duration: 120; curve: Look.standard } }
+                            onClicked: Clip.togglePin(row.modelData.id)
                         }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onPositionChanged: lv.currentIndex = row.index
-                        onClicked: root.launch(row.modelData.entry)
+                        IconButton {
+                            size: 28
+                            glyph: "\uf00d"
+                            opacity: row.hot ? 1 : 0
+                            enabled: opacity > 0
+                            Behavior on opacity { Anim { duration: 120; curve: Look.standard } }
+                            onClicked: Clip.remove(row.modelData.id)
+                        }
                     }
                 }
-
             }
         }
 
         Label {
             anchors.horizontalCenter: parent.horizontalCenter
-            y: 14 + 46 + 10 + 12
+            y: 14 + 46 + 10 + 18
             visible: root.empty
             opacity: root.open ? 1 : 0
-            text: root.query === "" ? "No applications found" : "No apps match “" + root.query + "”"
+            text: !Clip.available ? "Needs cliphist + wl-clipboard installed"
+                : root.query === "" ? "Clipboard history is empty — copy something"
+                : "Nothing matches “" + root.query + "”"
             color: Look.fgDim
         }
     }

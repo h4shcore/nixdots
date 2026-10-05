@@ -80,28 +80,32 @@ Item {
         height: contentHeight
         spacing: 8
         interactive: false
-        model: ScriptModel { values: [...Notifs.popups] }
+        model: ScriptModel { values: [...Notifs.popups].slice(0, 4) }
 
         delegate: NotifCard {
+            id: nc
+
             required property var modelData
+            property bool entered: false
+
             width: ListView.view.width
             entry: modelData
+
+            // enter animation lives in the card itself, so rapid arrivals can't interrupt it
+            opacity: entered ? 1 : 0
+            scale: entered ? 1 : 0.9
+            Behavior on opacity { Anim { duration: 220; curve: Look.standard } }
+            Behavior on scale { Anim {} }
+            Behavior on y { enabled: nc.entered; Anim {} }
+
+            Component.onCompleted: Qt.callLater(() => nc.entered = true)
         }
 
-        add: Transition {
-            ParallelAnimation {
-                Anim { property: "opacity"; from: 0; to: 1; curve: Look.standard; duration: 200 }
-                Anim { property: "scale"; from: 0.9; to: 1 }
-            }
-        }
         remove: Transition {
             ParallelAnimation {
                 Anim { property: "opacity"; to: 0; curve: Look.standard; duration: 200 }
                 Anim { property: "scale"; to: 0.9; curve: Look.standard; duration: 200 }
             }
-        }
-        displaced: Transition {
-            Anim { property: "y" }
         }
     }
 }
