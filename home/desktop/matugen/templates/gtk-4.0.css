@@ -539,3 +539,7 @@ tooltip {
 .image-button.flat arrow {
   background: transparent;
 }
+
+scale trough highlight {
+    background-color: @accent_color;
+}
