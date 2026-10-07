@@ -37,6 +37,15 @@ Singleton {
     property bool grabbing: false
     property string shotWhere: ""
 
+    // frozen frame shown behind the selector (taken with grim before the overlay appears)
+    property string freezePath: ""
+    readonly property string runtimeDir: Quickshell.env("XDG_RUNTIME_DIR") || "/tmp"
+
+    function dropFreeze() {
+        if (freezePath !== "") Quickshell.execDetached(["rm", "-f", freezePath]);
+        freezePath = "";
+    }
+
     function fmt(s) {
         s = Math.max(0, Math.floor(s || 0));
         return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
@@ -78,6 +87,7 @@ Singleton {
 
     function cancel() {
         selecting = false;
+        dropFreeze();
         countdown = 0;
         pending = null;
         countTimer.stop();
@@ -86,11 +96,13 @@ Singleton {
 
     function finishRect(scr, x, y, w, h) {
         selecting = false;
+        dropFreeze();
         arm({ x: Math.round(scr.x + x), y: Math.round(scr.y + y), w: Math.round(w), h: Math.round(h), output: "" });
     }
 
     function finishWindow(c) {
         selecting = false;
+        dropFreeze();
         arm({ x: Math.round(c.x), y: Math.round(c.y), w: Math.round(c.w), h: Math.round(c.h), output: "", address: c.address });
     }
 
@@ -214,7 +226,9 @@ Singleton {
                     Hyprland.refreshToplevels();
                     winProc.running = true;
                 }
-                root.selecting = true;
+                root.freezePath = root.runtimeDir + "/notch-freeze-" + root.stamp() + ".png";
+                freezeProc.command = ["grim", "-o", scr.name, root.freezePath];
+                freezeProc.running = true;
             }
         }
     }
@@ -240,6 +254,14 @@ Singleton {
         interval: 1000
         repeat: true
         onTriggered: root.elapsed++
+    }
+
+    Process {
+        id: freezeProc
+        onExited: code => {
+            if (code !== 0) root.freezePath = "";     // no freeze frame: overlay just dims the live screen
+            root.selecting = true;
+        }
     }
 
     Timer {

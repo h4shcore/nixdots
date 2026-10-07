@@ -32,10 +32,7 @@ PanelWindow {
 
     onMineChanged: {
         resetSel();
-        if (mine) {
-            frameTimer.restart();
-            stage.forceActiveFocus();
-        }
+        if (mine) stage.forceActiveFocus();
     }
 
     Behavior on selX { enabled: win.windowMode; Anim { duration: 140; curve: Look.standard } }
@@ -56,12 +53,6 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: mine ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    Timer {
-        id: frameTimer
-        interval: 30
-        onTriggered: sv.captureFrame()
-    }
-
     Item {
         id: stage
         anchors.fill: parent
@@ -74,12 +65,13 @@ PanelWindow {
             }
         }
 
-        ScreencopyView {
-            id: sv
+        // frozen frame, captured before this overlay existed (so it can't photograph itself)
+        Image {
             anchors.fill: parent
-            captureSource: win.screen
-            live: false
-            paintCursor: false
+            source: win.mine && Capture.freezePath !== "" ? "file://" + Capture.freezePath : ""
+            fillMode: Image.Stretch
+            cache: false
+            asynchronous: false
         }
 
         // dim everything except the selection
