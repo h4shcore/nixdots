@@ -7,6 +7,9 @@ Item {
 
     property string glyph
     property real value: 0
+    property color fill: Look.primary
+    property color fillFg: Look.primaryFg
+    property bool readOnly: false
     readonly property bool pressed: area.pressed
     signal moved(real v)
     signal iconClicked
@@ -62,20 +65,21 @@ Item {
         width: root.shownFill
         height: parent.height
         radius: height / 2
-        color: Look.primary
+        color: root.fill
 
         Face {
             width: root.width
             height: root.height
             glyph: root.glyph
             value: root.value
-            col: Look.primaryFg
+            col: root.fillFg
         }
     }
 
     MouseArea {
         id: area
         anchors.fill: parent
+        enabled: !root.readOnly
         preventStealing: true
         function update(mx) { root.moved(Math.max(0, Math.min(1, mx / width))); }
         onPressed: m => update(m.x)
@@ -84,6 +88,7 @@ Item {
 
     // icon zone = click (mute etc.), sits above the drag area
     MouseArea {
+        enabled: !root.readOnly
         width: 46
         height: parent.height
         onClicked: root.iconClicked()

@@ -10,6 +10,7 @@ hl.bind(mainMod .. " + SHIFT + Space", hl.dsp.window.float({ action = "toggle" }
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(P.menu))
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(P.wallpaper))
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd(P.clipboard))
+hl.bind(mainMod .. " + BackSpace", hl.dsp.exec_cmd(P.powermenu))
 -- hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd(P.screenshot))
 hl.bind(mainMod .. " + ALT + S",   hl.dsp.exec_cmd("qs -c notch ipc call capture toggle"))      -- open the capture panel
 hl.bind("Print",                   hl.dsp.exec_cmd("qs -c notch ipc call capture region"))      -- screenshot a region

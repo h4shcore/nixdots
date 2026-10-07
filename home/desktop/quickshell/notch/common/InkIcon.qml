@@ -1,8 +1,8 @@
 import QtQuick
 
-// Icon centered in a fixed box. With `ink: true` it measures the glyph's visible shape and centers that
-// (Nerd Font glyphs have uneven bearings); with `ink: false` it just centers the text box.
-// Crossfades + springs between glyphs when `text` changes.
+// Icon centered in a fixed box. With `ink: true` it measures the glyph's visible shape and centers that;
+// with `ink: false` it just centers the text box. Crossfades + springs between icons when `text` changes.
+// `text` may be a Nerd Font glyph or a Material icon name (see Icons.qml).
 Item {
     id: root
 
@@ -10,7 +10,6 @@ Item {
     property color color: Look.fg
     property int pixelSize: 18
     property int box: 28
-    property string family: "Symbols Nerd Font Mono"   // falls back to any font that has the glyph
     property bool ink: true
     property string last: ""
 
@@ -24,8 +23,9 @@ Item {
         property color color: Look.fg
         property int size: 18
         property int box: 28
-        property string family
         property bool measure: true
+
+        readonly property var res: Icons.resolve(text)
 
         width: box
         height: box
@@ -33,16 +33,16 @@ Item {
 
         TextMetrics {
             id: tm
-            font.family: it.family
-            font.pixelSize: it.size
-            text: it.text
+            font.family: it.res.family
+            font.pixelSize: it.size * Icons.sizeScale
+            text: it.res.text
         }
         Text {
             id: glyph
-            text: it.text
+            text: it.res.text
             color: it.color
-            font.family: it.family
-            font.pixelSize: it.size
+            font.family: it.res.family
+            font.pixelSize: it.size * Icons.sizeScale
             x: it.measure ? (it.box - tm.tightBoundingRect.width) / 2 - tm.tightBoundingRect.x
                           : (it.box - width) / 2
             y: it.measure ? (it.box - tm.tightBoundingRect.height) / 2 - (glyph.baselineOffset + tm.tightBoundingRect.y)
@@ -56,7 +56,6 @@ Item {
         color: root.color
         size: root.pixelSize
         box: root.box
-        family: root.family
         measure: root.ink
     }
     Ink {
@@ -65,7 +64,6 @@ Item {
         color: root.color
         size: root.pixelSize
         box: root.box
-        family: root.family
         measure: root.ink
     }
 

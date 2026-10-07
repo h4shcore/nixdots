@@ -67,6 +67,7 @@ PanelWindow {
         Region { item: wallDock }
         Region { item: clipDock }
         Region { item: capDock }
+        Region { item: powerDock }
         Region { item: scrim }
     }
 
@@ -182,6 +183,13 @@ PanelWindow {
 
     LauncherDock {
         id: launcher
+        screenWidth: win.width
+        screenHeight: win.height
+        active: win.focusedHere
+    }
+
+    PowerDock {
+        id: powerDock
         screenWidth: win.width
         screenHeight: win.height
         active: win.focusedHere

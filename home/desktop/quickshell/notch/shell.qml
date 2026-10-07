@@ -21,6 +21,18 @@ ShellRoot {
 
     WindowGrabber {}
 
+    // qs -c notch ipc call power toggle
+    IpcHandler {
+        target: "power"
+
+        function toggle(): void { LauncherState.toggleMode("power"); }
+        function show(): void {
+            LauncherState.mode = "power";
+            LauncherState.open = true;
+        }
+        function hide(): void { LauncherState.hide(); }
+    }
+
     // qs -c notch ipc call capture toggle | region | window | fullscreen | record | stop
     IpcHandler {
         target: "capture"
