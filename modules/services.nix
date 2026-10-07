@@ -15,6 +15,10 @@
     gvfs = {
       enable = true;
     };
+
+    upower = {
+      enable = true;
+    };
   };
 
   # Enable the OpenSSH daemon.

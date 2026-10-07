@@ -23,6 +23,7 @@
 
   home.packages = with pkgs; [
     noto-fonts-color-emoji
+    material-symbols
     maple-mono.NF
   ];
 }

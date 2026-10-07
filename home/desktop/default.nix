@@ -16,6 +16,7 @@
     quickshell
     grim
     wf-recorder
+    hyprlock
   ];
 
   imports = [
