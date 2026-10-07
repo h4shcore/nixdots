@@ -32,6 +32,11 @@ Singleton {
     property bool hasGrim: true
     property bool hasRec: true
 
+    // single-window screenshots go through a toplevel grab (see WindowGrabber.qml)
+    property var grabToplevel: null
+    property bool grabbing: false
+    property string shotWhere: ""
+
     function fmt(s) {
         s = Math.max(0, Math.floor(s || 0));
         return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
@@ -86,7 +91,33 @@ Singleton {
 
     function finishWindow(c) {
         selecting = false;
-        arm({ x: Math.round(c.x), y: Math.round(c.y), w: Math.round(c.w), h: Math.round(c.h), output: "" });
+        arm({ x: Math.round(c.x), y: Math.round(c.y), w: Math.round(c.w), h: Math.round(c.h), output: "", address: c.address });
+    }
+
+    function toplevelFor(address) {
+        const a = String(address).replace(/^0x/, "");
+        const t = Hyprland.toplevels.values.find(x => String(x.address).replace(/^0x/, "") === a);
+        return t ? t.wayland : null;
+    }
+
+    function runShot() {
+        shotProc.command = ["sh", "-c", "mkdir -p '" + shotDir + "' && grim " + shotWhere + " '" + shotPath + "' && wl-copy < '" + shotPath + "'"];
+        shotProc.running = true;
+    }
+
+    // called by WindowGrabber; falls back to a plain region grab if the window grab failed
+    function grabbed(ok) {
+        if (!grabbing) return;
+        grabTimeout.stop();
+        grabbing = false;
+        grabToplevel = null;
+        if (ok) {
+            clipProc.command = ["sh", "-c", "wl-copy < '" + shotPath + "'"];
+            clipProc.running = true;
+            notify("Screenshot saved", shotPath.slice(shotPath.lastIndexOf("/") + 1) + "\nCopied to clipboard", shotPath);
+        } else {
+            runShot();
+        }
     }
 
     function arm(p) {
@@ -114,8 +145,17 @@ Singleton {
         if (kind === "shot") {
             const f = shotDir + "/screenshot_" + stamp() + ".png";
             shotPath = f;
-            shotProc.command = ["sh", "-c", "mkdir -p '" + shotDir + "' && grim " + where + " '" + f + "' && wl-copy < '" + f + "'"];
-            shotProc.running = true;
+            shotWhere = where;
+            if (p.address) {
+                const tl = toplevelFor(p.address);
+                if (tl) {
+                    grabToplevel = tl;
+                    grabbing = true;
+                    grabTimeout.restart();
+                    return;
+                }
+            }
+            runShot();
         } else {
             const f = recDir + "/recording_" + stamp() + ".mp4";
             recPath = f;
@@ -169,7 +209,11 @@ Singleton {
             if (root.target === "screen") {
                 root.arm({ x: 0, y: 0, w: 0, h: 0, output: scr.name });
             } else {
-                if (root.target === "window") winProc.running = true;
+                if (root.target === "window") {
+                    root.windows = [];
+                    Hyprland.refreshToplevels();
+                    winProc.running = true;
+                }
                 root.selecting = true;
             }
         }
@@ -198,6 +242,19 @@ Singleton {
         onTriggered: root.elapsed++
     }
 
+    Timer {
+        id: grabTimeout
+        interval: 3500
+        onTriggered: root.grabbed(false)
+    }
+
+    Process { id: clipProc }
+
+    Process {
+        command: ["mkdir", "-p", root.shotDir, root.recDir]
+        running: true
+    }
+
     Process {
         id: shotProc
         onExited: code => {
@@ -216,19 +273,30 @@ Singleton {
         }
     }
 
+    // windows on the focused monitor: its active workspace + its open special workspace (on top)
     Process {
         id: winProc
-        command: ["hyprctl", "clients", "-j"]
+        command: ["sh", "-c", "hyprctl -j monitors; echo '@@@'; hyprctl -j clients"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
+                    const parts = text.split("@@@");
+                    const mons = JSON.parse(parts[0]);
+                    const clients = JSON.parse(parts[1]);
                     const scr = root.selectScreen;
-                    const ws = Hyprland.monitorFor(scr)?.activeWorkspace?.id;
-                    root.windows = JSON.parse(text)
-                        .filter(c => c.mapped && !c.hidden && c.workspace && c.workspace.id === ws)
-                        .sort((a, b) => a.focusHistoryID - b.focusHistoryID)
-                        .map(c => ({ x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1], title: c.title }));
+                    const mon = mons.find(m => m.name === scr.name);
+                    const ws = mon ? mon.activeWorkspace.id : -1;
+                    const sp = mon && mon.specialWorkspace ? mon.specialWorkspace.id : 0;
+                    const onSpecial = c => sp !== 0 && c.workspace.id === sp;
+
+                    root.windows = clients
+                        .filter(c => c.mapped && !c.hidden && c.workspace && (c.workspace.id === ws || onSpecial(c)))
+                        .filter(c => c.at[0] < scr.x + scr.width && c.at[0] + c.size[0] > scr.x
+                                  && c.at[1] < scr.y + scr.height && c.at[1] + c.size[1] > scr.y)
+                        .sort((a, b) => (onSpecial(b) - onSpecial(a)) || (b.floating - a.floating) || (a.focusHistoryID - b.focusHistoryID))
+                        .map(c => ({ x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1], title: c.title || c["class"], address: c.address }));
                 } catch (err) {
+                    console.warn("Capture: could not read windows:", err);
                     root.windows = [];
                 }
             }

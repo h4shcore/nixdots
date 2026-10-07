@@ -19,6 +19,8 @@ ShellRoot {
         function hide(): void { LauncherState.hide(); }
     }
 
+    WindowGrabber {}
+
     // qs -c notch ipc call capture toggle | region | window | fullscreen | record | stop
     IpcHandler {
         target: "capture"

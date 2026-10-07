@@ -141,7 +141,7 @@ PanelWindow {
                 font.pixelSize: 12
                 color: Look.fgDim
                 text: (Capture.kind === "record" ? "Record  ·  " : "Screenshot  ·  ")
-                    + (win.windowMode ? "click a window" : "drag to select an area") + "  ·  Esc to cancel"
+                    + (win.windowMode ? (Capture.windows.length > 0 ? "click a window" : "looking for windows…") : "drag to select an area") + "  ·  Esc to cancel"
             }
         }
 
