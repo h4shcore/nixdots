@@ -7,5 +7,5 @@ return {
     wallpaper   = "qs -c notch ipc call wallpaper toggle",
     clipboard   = "qs -c notch ipc call clipboard toggle",
     mainMod     = "SUPER",
-    screenshot  = "grimblast --freeze copysave area ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png",
+    -- screenshot  = "grimblast --freeze copysave area ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png",
 }

@@ -7,6 +7,7 @@ Scope {
     required property var modelData
 
     Bar { screen: root.modelData }
+    CaptureOverlay { screen: root.modelData }
 
     Exclusion { screen: root.modelData; edge: "top"; size: Look.reserveTop }
     Exclusion { screen: root.modelData; edge: "bottom"; size: Look.border }

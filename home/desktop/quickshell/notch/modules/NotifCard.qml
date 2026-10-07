@@ -10,7 +10,7 @@ Rectangle {
 
     required property var entry
     readonly property var n: entry?.notif ?? null
-    readonly property string src: !n ? "" : ((n.image ?? "") !== "" ? n.image : ((n.appIcon ?? "") !== "" ? Quickshell.iconPath(n.appIcon, true) : ""))
+    readonly property string src: !n ? "" : ((n.image ?? "") !== "" ? n.image : ((n.appIcon ?? "") !== "" ? (n.appIcon.startsWith("/") ? "file://" + n.appIcon : Quickshell.iconPath(n.appIcon, true)) : ""))
 
     implicitHeight: col.implicitHeight + 24
     radius: 20

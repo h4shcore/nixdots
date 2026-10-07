@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import QtQuick.Shapes
 import Quickshell
 import Quickshell.Wayland
@@ -65,6 +66,7 @@ PanelWindow {
         Region { item: launcher }
         Region { item: wallDock }
         Region { item: clipDock }
+        Region { item: capDock }
         Region { item: scrim }
     }
 
@@ -185,6 +187,13 @@ PanelWindow {
         active: win.focusedHere
     }
 
+    CaptureDock {
+        id: capDock
+        screenWidth: win.width
+        screenHeight: win.height
+        active: win.focusedHere
+    }
+
     ClipboardDock {
         id: clipDock
         screenWidth: win.width
@@ -266,13 +275,17 @@ PanelWindow {
                 y: Look.border
                 height: Look.pillHeight - Look.border
 
-                Clock {
+                RowLayout {
                     id: clock
                     anchors.centerIn: parent
+                    spacing: 12
                     opacity: win.songShowing ? 0 : 1
                     scale: win.songShowing ? 0.9 : 1
                     Behavior on opacity { Anim { duration: 200; curve: Look.standard } }
                     Behavior on scale { Anim { duration: 200; curve: Look.standard } }
+
+                    RecChip {}
+                    Clock {}
                 }
 
                 Chip {
