@@ -296,6 +296,36 @@ PanelWindow {
                     Clock {}
                 }
 
+                // battery: small icon + percentage (hover for the time estimate)
+                Chip {
+                    id: batChip
+                    anchors.left: parent.left
+                    anchors.leftMargin: Look.pad - 6
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: Battery.present
+                    opacity: win.expanded ? 1 : 0
+                    enabled: win.expanded
+                    Behavior on opacity { Anim { duration: 250; curve: Look.standard } }
+
+                    InkIcon {
+                        text: Battery.icon
+                        pixelSize: 15
+                        box: 22
+                        color: Battery.low ? Look.error : (Battery.charging ? Look.primary : Look.fg)
+                    }
+                    Label {
+                        text: Math.round(Battery.percent) + "%"
+                        font.pixelSize: 12
+                        color: Battery.low ? Look.error : Look.fg
+                    }
+                    Label {
+                        visible: batChip.hovered && Battery.eta !== ""
+                        text: "· " + Battery.eta
+                        font.pixelSize: 11
+                        color: Look.fgDim
+                    }
+                }
+
                 Chip {
                     anchors.right: parent.right
                     anchors.rightMargin: Look.pad - 6

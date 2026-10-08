@@ -79,35 +79,6 @@ Item {
 
         Reveal {
             Layout.fillWidth: true
-            visible: Battery.present
-            shown: root.shown
-            delay: 125
-
-            ColumnLayout {
-                width: parent.width
-                spacing: 4
-
-                FatSlider {
-                    Layout.fillWidth: true
-                    readOnly: true
-                    glyph: Battery.icon
-                    value: Battery.percent / 100
-                    fill: Battery.low ? Look.error : Look.primary
-                    fillFg: Battery.low ? Look.surface : Look.primaryFg
-                }
-                Label {
-                    Layout.alignment: Qt.AlignRight
-                    Layout.rightMargin: 14
-                    visible: text !== ""
-                    text: Battery.eta
-                    color: Look.fgDim
-                    font.pixelSize: 11
-                }
-            }
-        }
-
-        Reveal {
-            Layout.fillWidth: true
             visible: Players.active !== null
             shown: root.shown
             delay: 150

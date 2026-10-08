@@ -19,7 +19,7 @@ Item {
 
     // edit these if your setup differs
     readonly property var commands: ({
-        lock: ["hyprlock"],
+        lock: ["loginctl", "lock-session"],
         logout: ["uwsm", "stop"],
         suspend: ["systemctl", "suspend"],
         reboot: ["systemctl", "reboot"],
