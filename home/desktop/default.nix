@@ -23,7 +23,7 @@
     ./theme.nix
 
     ./fuzzel
-    # ./niri
+    ./niri
     ./hypr
     ./quickshell
   ];
