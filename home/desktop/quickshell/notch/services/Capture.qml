@@ -40,6 +40,15 @@ Singleton {
 
     // frozen frame shown behind the selector (taken with grim before the overlay appears)
     property string freezePath: ""
+
+    // region screenshots are cropped from the freeze frame (see WindowGrabber.qml)
+    property bool cropping: false
+    property real cropX: 0
+    property real cropY: 0
+    property real cropW: 0
+    property real cropH: 0
+    property real cropScrW: 0
+    property real cropScrH: 0
     readonly property string runtimeDir: Quickshell.env("XDG_RUNTIME_DIR") || "/tmp"
 
     function dropFreeze() {
@@ -97,8 +106,21 @@ Singleton {
 
     function finishRect(scr, x, y, w, h) {
         selecting = false;
-        dropFreeze();
-        arm({ x: Math.round(scr.x + x), y: Math.round(scr.y + y), w: Math.round(w), h: Math.round(h), output: "" });
+        const p = { x: Math.round(scr.x + x), y: Math.round(scr.y + y), w: Math.round(w), h: Math.round(h), output: "" };
+        // instant screenshots: crop what you saw out of the freeze frame. With a delay (or when recording)
+        // the point is to capture later / live, so use the live screen instead.
+        if (kind === "shot" && delay === 0 && freezePath !== "") {
+            cropX = x;
+            cropY = y;
+            cropW = w;
+            cropH = h;
+            cropScrW = scr.width;
+            cropScrH = scr.height;
+            p.crop = true;
+        } else {
+            dropFreeze();
+        }
+        arm(p);
     }
 
     function finishWindow(c) {
@@ -116,6 +138,21 @@ Singleton {
     function runShot() {
         shotProc.command = ["sh", "-c", "mkdir -p '" + shotDir + "' && grim " + shotWhere + " '" + shotPath + "' && wl-copy < '" + shotPath + "'"];
         shotProc.running = true;
+    }
+
+    // called by WindowGrabber after cropping the freeze frame; falls back to a live region grab on failure
+    function cropped(ok) {
+        if (!cropping) return;
+        grabTimeout.stop();
+        cropping = false;
+        dropFreeze();
+        if (ok) {
+            clipProc.command = ["sh", "-c", "wl-copy < '" + shotPath + "'"];
+            clipProc.running = true;
+            notify("Screenshot saved", shotPath.slice(shotPath.lastIndexOf("/") + 1) + "\nCopied to clipboard", shotPath);
+        } else {
+            runShot();
+        }
     }
 
     // called by WindowGrabber; falls back to a plain region grab if the window grab failed
@@ -159,6 +196,11 @@ Singleton {
             const f = shotDir + "/screenshot_" + stamp() + ".png";
             shotPath = f;
             shotWhere = where;
+            if (p.crop && freezePath !== "") {
+                cropping = true;
+                grabTimeout.restart();
+                return;
+            }
             if (p.address) {
                 const tl = toplevelFor(p.address);
                 if (tl) {
@@ -235,7 +277,7 @@ Singleton {
     }
     Timer {
         id: settleTimer
-        interval: 220
+        interval: 450
         onTriggered: root.fire()
     }
     Timer {
@@ -268,7 +310,10 @@ Singleton {
     Timer {
         id: grabTimeout
         interval: 3500
-        onTriggered: root.grabbed(false)
+        onTriggered: {
+            if (root.cropping) root.cropped(false);
+            else root.grabbed(false);
+        }
     }
 
     Process { id: clipProc }
