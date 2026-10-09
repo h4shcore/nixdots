@@ -4,7 +4,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 
-// Screenshots (grim) and screen recording (wf-recorder) with result notifications.
+// Screenshots (grim) and screen recording (wl-screenrec) with result notifications.
 // Output: ~/Pictures/Screenshots and ~/Videos/Recordings. Screenshots are also copied to the clipboard.
 Singleton {
     id: root
@@ -18,6 +18,7 @@ Singleton {
     property string target: "region"    // region | window | screen
     property int delay: 0
     property bool audio: false
+    property bool softwareEncode: false     // true -> pass --no-hw (no VAAPI hardware encoder available)
 
     // runtime
     property bool selecting: false
@@ -81,7 +82,7 @@ Singleton {
     }
 
     function stop() {
-        if (recording) recProc.signal(2);     // SIGINT -> wf-recorder finalizes the file
+        if (recording) recProc.signal(2);     // SIGINT -> wl-screenrec finalizes the file
         else cancel();
     }
 
@@ -171,7 +172,7 @@ Singleton {
         } else {
             const f = recDir + "/recording_" + stamp() + ".mp4";
             recPath = f;
-            recProc.command = ["sh", "-c", "mkdir -p '" + recDir + "' && exec wf-recorder " + (audio ? "-a " : "") + where + " -f '" + f + "'"];
+            recProc.command = ["sh", "-c", "mkdir -p '" + recDir + "' && exec wl-screenrec " + (audio ? "--audio " : "") + (softwareEncode ? "--no-hw " : "") + where + " -f '" + f + "'"];
             recProc.running = true;
             elapsed = 0;
             recording = true;
@@ -285,13 +286,22 @@ Singleton {
         }
     }
 
+    // exit codes after a Ctrl-C stop vary between recorders, so judge success by whether the file exists
     Process {
         id: recProc
         onExited: code => {
             root.recording = false;
             elapsedTimer.stop();
+            statProc.command = ["test", "-s", root.recPath];
+            statProc.running = true;
+        }
+    }
+
+    Process {
+        id: statProc
+        onExited: code => {
             if (code === 0) root.notify("Recording saved", root.recPath.slice(root.recPath.lastIndexOf("/") + 1) + "\n" + root.fmt(root.elapsed), root.recPath);
-            else root.notifyPlain("Recording stopped", "wf-recorder exited with code " + code);
+            else root.notifyPlain("Recording failed", "wl-screenrec didn't produce a file (try softwareEncode: true if you have no VAAPI encoder)");
         }
     }
 
@@ -331,7 +341,7 @@ Singleton {
         onExited: code => root.hasGrim = code === 0
     }
     Process {
-        command: ["sh", "-c", "command -v wf-recorder >/dev/null"]
+        command: ["sh", "-c", "command -v wl-screenrec >/dev/null"]
         running: true
         onExited: code => root.hasRec = code === 0
     }

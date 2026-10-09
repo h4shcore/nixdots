@@ -15,7 +15,7 @@
     pywalfox-native
     quickshell
     grim
-    wf-recorder
+    wl-screenrec
     hyprlock
   ];
 

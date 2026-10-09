@@ -45,7 +45,12 @@ Singleton {
         "battery_3_bar": "\uf242", "battery_2_bar": "\uf243", "battery_1_bar": "\uf244", "battery_alert": "\uf244",
         "battery_charging_full": "\uf0e7",
         "lock": "\uf023", "logout": "\uf08b", "bedtime": "\uf186", "restart_alt": "\uf021",
-        "power_settings_new": "\uf011"
+        "power_settings_new": "\uf011",
+        "arrow_back": "\uf060", "refresh": "\uf021", "expand_more": "\uf078",
+        "network_wifi_3_bar": "\uf1eb", "network_wifi_2_bar": "\uf1eb", "network_wifi_1_bar": "\uf1eb",
+        "headphones": "\uf025", "speaker": "\uf028", "keyboard": "\uf11c", "mouse": "\uf245",
+        "smartphone": "\uf10b", "computer": "\uf109", "tv": "\uf26c", "sports_esports": "\uf11b",
+        "mic_off": "\uf131"
     })
 
     readonly property var toNerd: {

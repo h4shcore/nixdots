@@ -248,7 +248,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     color: Look.error
                     font.pixelSize: 11
-                    text: Capture.kind === "shot" ? "grim not found — install grim + wl-clipboard" : "wf-recorder not found — install wf-recorder"
+                    text: Capture.kind === "shot" ? "grim not found — install grim + wl-clipboard" : "wl-screenrec not found — install wl-screenrec"
                 }
             }
         }
