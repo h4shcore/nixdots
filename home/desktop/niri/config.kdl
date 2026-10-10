@@ -70,29 +70,6 @@ window-rule {
     clip-to-geometry true
 }
 
-layer-rule {
-    match namespace="^launcher$"
-    shadow {
-        on
-    }
-}
-
-layer-rule {
-    match namespace="^notifications$"
-    shadow {
-        on
-    }
-}
-
-layer-rule {
-    match namespace="waybar"
-    match at-startup=true
-    match layer="top"
-    shadow {
-        on
-    }
-}
-
 cursor {
     xcursor-theme "Bibata-Original-Classic"
     xcursor-size 20
