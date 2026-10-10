@@ -2,13 +2,11 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Shapes
 import Quickshell
-import Quickshell.Hyprland
 import qs.common
 import qs.services
 
-// Workspace indicator attached to the top-left corner of the screen border.
-// Collapsed: current workspace. Hover: all of them.
-// Hyprland: workspaces 1-5 per page + your special workspaces. Niri: this monitor's workspaces.
+// Niri workspaces, attached to the top-left corner of the screen border.
+// Collapsed: current workspace. Hover: every workspace on this monitor (click to switch, scroll to move).
 Item {
     id: root
 
@@ -19,65 +17,16 @@ Item {
     readonly property real t: Look.border
     readonly property real r: 18
 
-    readonly property bool niri: Compositor.niri
-
-    // hyprland
-    readonly property var mon: Hyprland.monitorFor(screen)
-    readonly property int activeId: mon?.activeWorkspace?.id ?? 1
-    readonly property int page: Math.floor((Math.max(1, activeId) - 1) / 5) * 5 + 1
-    property string special: ""      // open special workspace, without the "special:" prefix
-
-    // niri: this output's workspaces, in order
-    readonly property var nws: Compositor.niriWorkspaces.filter(w => w.output === screen.name).sort((a, b) => a.idx - b.idx)
-    readonly property var nActive: nws.find(w => w.is_active) ?? null
-
-    readonly property int count: niri ? Math.max(1, nws.length) : 5
-    readonly property int activeNum: niri ? (nActive?.idx ?? 1) : activeId
+    // this monitor's workspaces, in order
+    readonly property var nws: Compositor.workspaces.filter(w => w.output === screen.name).sort((a, b) => a.idx - b.idx)
+    readonly property var cur: nws.find(w => w.is_active) ?? null
+    readonly property int count: Math.max(1, nws.length)
+    readonly property int activeNum: cur?.idx ?? 1
 
     property bool expanded: false
     property bool shown: false
 
-    readonly property var specials: [
-        { name: "magic", glyph: "\uf0d0", label: "Magic" },
-        { name: "chat", glyph: "\uf086", label: "Chat" },
-        { name: "music", glyph: "\uf001", label: "Music" }
-    ]
-
-    function specialInfo(name) {
-        for (let i = 0; i < specials.length; i++)
-            if (specials[i].name === name) return specials[i];
-        return { name: name, glyph: "\uf005", label: name.charAt(0).toUpperCase() + name.slice(1) };
-    }
-
-    function hasWs(id) {
-        const v = Hyprland.workspaces.values;
-        for (let i = 0; i < v.length; i++)
-            if (v[i].id === id) return true;
-        return false;
-    }
-
-    function hasSpecial(name) {
-        const v = Hyprland.workspaces.values;
-        for (let i = 0; i < v.length; i++)
-            if (v[i].name === "special:" + name) return true;
-        return false;
-    }
-
-    Component.onCompleted: {
-        shown = true;
-        special = (mon?.lastIpcObject?.specialWorkspace?.name ?? "").replace(/^special:/, "");
-    }
-
-    // hyprland: activespecial>>special:NAME,MONITOR  (NAME empty when it closes)
-    Connections {
-        target: Hyprland
-        function onRawEvent(event) {
-            if (event.name !== "activespecial") return;
-            const d = event.data.split(",");
-            if (d[1] !== root.screen.name) return;
-            root.special = d[0].replace(/^special:/, "");
-        }
-    }
+    Component.onCompleted: shown = true
 
     // ── geometry ──
     readonly property real collapsedW: head.implicitWidth + Look.pad * 2 + t
@@ -113,11 +62,7 @@ Item {
     }
 
     WheelHandler {
-        onWheel: e => {
-            const up = e.angleDelta.y > 0;
-            if (root.niri) Compositor.niriAction([up ? "focus-workspace-up" : "focus-workspace-down"]);
-            else Hyprland.dispatch(up ? 'hl.dsp.focus({ workspace = "e-1" })' : 'hl.dsp.focus({ workspace = "e+1" })');
-        }
+        onWheel: e => Compositor.action([e.angleDelta.y > 0 ? "focus-workspace-up" : "focus-workspace-down"])
     }
 
     // ── body shape (concave ears into the top + left borders) ──
@@ -167,7 +112,7 @@ Item {
             spacing: 8
 
             InkIcon {
-                text: !root.niri && root.special !== "" ? root.specialInfo(root.special).glyph : "\uf009"
+                text: "\uf009"
                 pixelSize: 13
                 box: 20
                 color: Look.primary
@@ -175,9 +120,7 @@ Item {
             Label {
                 font.bold: true
                 font.pixelSize: 13
-                text: !root.niri && root.special !== ""
-                    ? (root.expanded ? "Special · " : "") + root.specialInfo(root.special).label
-                    : (root.expanded ? "Workspace " : "") + (root.niri ? (root.nActive?.name || root.activeNum) : root.activeNum)
+                text: (root.expanded ? "Workspace " : "") + (root.cur?.name || root.activeNum)
             }
         }
 
@@ -196,23 +139,19 @@ Item {
                     id: cell
 
                     required property int index
-                    readonly property int wsId: root.page + index                       // hyprland
-                    readonly property var nw: root.niri ? (root.nws[index] ?? null) : null   // niri
-                    readonly property bool current: root.niri ? (nw?.is_active ?? false) : root.activeId === wsId
-                    readonly property bool on: current && (root.niri || root.special === "")
-                    readonly property bool occupied: root.niri ? (nw?.active_window_id != null) : root.hasWs(wsId)
+                    readonly property var nw: root.nws[index] ?? null
+                    readonly property bool on: nw?.is_active ?? false
+                    readonly property bool occupied: nw?.active_window_id != null
 
                     Layout.preferredWidth: 28
                     Layout.preferredHeight: 28
                     radius: 14
                     color: on ? Look.primary : cm.containsMouse ? Look.surfaceHiest : Look.surfaceHi
-                    border.width: current && !on ? 1 : 0
-                    border.color: Look.primary
                     Behavior on color { ColorAnimation { duration: 150 } }
 
                     Label {
                         anchors.centerIn: parent
-                        text: root.niri ? (cell.nw ? cell.nw.idx : cell.index + 1) : cell.wsId
+                        text: cell.nw ? cell.nw.idx : cell.index + 1
                         font.pixelSize: 12
                         font.bold: cell.on
                         color: cell.on ? Look.primaryFg : (cell.occupied ? Look.fg : Look.fgDim)
@@ -221,62 +160,7 @@ Item {
                         id: cm
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: {
-                            if (root.niri) Compositor.niriAction(["focus-workspace", String(cell.nw ? cell.nw.idx : cell.index + 1)]);
-                            else Hyprland.dispatch("hl.dsp.focus({ workspace = " + cell.wsId + " })");
-                        }
-                    }
-                }
-            }
-
-            // special workspaces: Hyprland only
-            Rectangle {
-                visible: !root.niri
-                Layout.preferredWidth: 1
-                Layout.preferredHeight: 16
-                Layout.leftMargin: 4
-                Layout.rightMargin: 4
-                color: Look.outline
-            }
-
-            Repeater {
-                model: root.niri ? [] : root.specials
-
-                Rectangle {
-                    id: scell
-
-                    required property var modelData
-                    readonly property bool on: root.special === modelData.name
-
-                    Layout.preferredWidth: 28
-                    Layout.preferredHeight: 28
-                    radius: 14
-                    color: on ? Look.primary : sm.containsMouse ? Look.surfaceHiest : Look.surfaceHi
-                    Behavior on color { ColorAnimation { duration: 150 } }
-
-                    InkIcon {
-                        anchors.centerIn: parent
-                        text: scell.modelData.glyph
-                        pixelSize: 13
-                        box: 28
-                        color: scell.on ? Look.primaryFg : (root.hasSpecial(scell.modelData.name) ? Look.fg : Look.fgDim)
-                    }
-                    // dot = has windows
-                    Rectangle {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottom: parent.bottom
-                        anchors.bottomMargin: 2
-                        width: 4
-                        height: 4
-                        radius: 2
-                        color: Look.primary
-                        visible: !scell.on && root.hasSpecial(scell.modelData.name)
-                    }
-                    MouseArea {
-                        id: sm
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: Hyprland.dispatch('hl.dsp.workspace.toggle_special("' + scell.modelData.name + '")')
+                        onClicked: Compositor.action(["focus-workspace", String(cell.nw ? cell.nw.idx : cell.index + 1)])
                     }
                 }
             }

@@ -2,7 +2,6 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Hyprland
 
 // Screenshots (grim) and screen recording (wl-screenrec) with result notifications.
 // Output: ~/Pictures/Screenshots and ~/Videos/Recordings. Screenshots are also copied to the clipboard.
@@ -33,15 +32,12 @@ Singleton {
     property bool hasGrim: true
     property bool hasRec: true
 
-    // single-window screenshots go through a toplevel grab (see WindowGrabber.qml)
-    property var grabToplevel: null
-    property bool grabbing: false
     property string shotWhere: ""
 
     // frozen frame shown behind the selector (taken with grim before the overlay appears)
     property string freezePath: ""
 
-    // region screenshots are cropped from the freeze frame (see WindowGrabber.qml)
+    // region screenshots are cropped from the freeze frame (see Cropper.qml)
     property bool cropping: false
     property real cropX: 0
     property real cropY: 0
@@ -123,22 +119,10 @@ Singleton {
         arm(p);
     }
 
+    // niri has no per-window capture protocol: crop the window's rectangle like a region
     function finishWindow(c) {
-        // niri has no per-window capture protocol: crop the window's rectangle like a region instead
-        if (Compositor.niri) {
-            const scr = selectScreen;
-            finishRect(scr, c.x - scr.x, c.y - scr.y, c.w, c.h);
-            return;
-        }
-        selecting = false;
-        dropFreeze();
-        arm({ x: Math.round(c.x), y: Math.round(c.y), w: Math.round(c.w), h: Math.round(c.h), output: "", address: c.address });
-    }
-
-    function toplevelFor(address) {
-        const a = String(address).replace(/^0x/, "");
-        const t = Hyprland.toplevels.values.find(x => String(x.address).replace(/^0x/, "") === a);
-        return t ? t.wayland : null;
+        const scr = selectScreen;
+        finishRect(scr, c.x - scr.x, c.y - scr.y, c.w, c.h);
     }
 
     function runShot() {
@@ -146,27 +130,12 @@ Singleton {
         shotProc.running = true;
     }
 
-    // called by WindowGrabber after cropping the freeze frame; falls back to a live region grab on failure
+    // called by Cropper after cropping the freeze frame; falls back to a live region grab on failure
     function cropped(ok) {
         if (!cropping) return;
         grabTimeout.stop();
         cropping = false;
         dropFreeze();
-        if (ok) {
-            clipProc.command = ["sh", "-c", "wl-copy < '" + shotPath + "'"];
-            clipProc.running = true;
-            notify("Screenshot saved", shotPath.slice(shotPath.lastIndexOf("/") + 1) + "\nCopied to clipboard", shotPath);
-        } else {
-            runShot();
-        }
-    }
-
-    // called by WindowGrabber; falls back to a plain region grab if the window grab failed
-    function grabbed(ok) {
-        if (!grabbing) return;
-        grabTimeout.stop();
-        grabbing = false;
-        grabToplevel = null;
         if (ok) {
             clipProc.command = ["sh", "-c", "wl-copy < '" + shotPath + "'"];
             clipProc.running = true;
@@ -206,15 +175,6 @@ Singleton {
                 cropping = true;
                 grabTimeout.restart();
                 return;
-            }
-            if (p.address) {
-                const tl = toplevelFor(p.address);
-                if (tl) {
-                    grabToplevel = tl;
-                    grabbing = true;
-                    grabTimeout.restart();
-                    return;
-                }
             }
             runShot();
         } else {
@@ -272,12 +232,7 @@ Singleton {
             } else {
                 if (root.target === "window") {
                     root.windows = [];
-                    if (Compositor.niri) {
-                        niriWinProc.running = true;
-                    } else {
-                        Hyprland.refreshToplevels();
-                        winProc.running = true;
-                    }
+                    niriWinProc.running = true;
                 }
                 root.freezePath = root.runtimeDir + "/notch-freeze-" + root.stamp() + ".png";
                 freezeProc.command = ["grim", "-o", scr.name, root.freezePath];
@@ -320,10 +275,7 @@ Singleton {
     Timer {
         id: grabTimeout
         interval: 3500
-        onTriggered: {
-            if (root.cropping) root.cropped(false);
-            else root.grabbed(false);
-        }
+        onTriggered: root.cropped(false)
     }
 
     Process { id: clipProc }
@@ -393,36 +345,6 @@ Singleton {
                         .sort((a, b) => (b.floating - a.floating) || (b.focused - a.focused));
                 } catch (err) {
                     console.warn("Capture: could not read niri windows:", err);
-                    root.windows = [];
-                }
-            }
-        }
-    }
-
-    // hyprland: windows on the focused monitor: its active workspace + its open special workspace (on top)
-    Process {
-        id: winProc
-        command: ["sh", "-c", "hyprctl -j monitors; echo '@@@'; hyprctl -j clients"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const parts = text.split("@@@");
-                    const mons = JSON.parse(parts[0]);
-                    const clients = JSON.parse(parts[1]);
-                    const scr = root.selectScreen;
-                    const mon = mons.find(m => m.name === scr.name);
-                    const ws = mon ? mon.activeWorkspace.id : -1;
-                    const sp = mon && mon.specialWorkspace ? mon.specialWorkspace.id : 0;
-                    const onSpecial = c => sp !== 0 && c.workspace.id === sp;
-
-                    root.windows = clients
-                        .filter(c => c.mapped && !c.hidden && c.workspace && (c.workspace.id === ws || onSpecial(c)))
-                        .filter(c => c.at[0] < scr.x + scr.width && c.at[0] + c.size[0] > scr.x
-                                  && c.at[1] < scr.y + scr.height && c.at[1] + c.size[1] > scr.y)
-                        .sort((a, b) => (onSpecial(b) - onSpecial(a)) || (b.floating - a.floating) || (a.focusHistoryID - b.focusHistoryID))
-                        .map(c => ({ x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1], title: c.title || c["class"], address: c.address }));
-                } catch (err) {
-                    console.warn("Capture: could not read windows:", err);
                     root.windows = [];
                 }
             }

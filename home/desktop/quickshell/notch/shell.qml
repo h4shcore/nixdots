@@ -19,7 +19,7 @@ ShellRoot {
         function hide(): void { LauncherState.hide(); }
     }
 
-    WindowGrabber {}
+    Cropper {}
 
     // qs -c notch ipc call power toggle
     IpcHandler {

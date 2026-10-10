@@ -2,31 +2,21 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Hyprland
 
-// Thin compositor adapter: this config runs on Niri and on Hyprland (auto-detected from the environment).
+// Niri integration: focused output, workspaces, actions. Refreshed on every niri event.
 Singleton {
     id: root
 
-    readonly property bool niri: !!Quickshell.env("NIRI_SOCKET")
-    readonly property bool hyprland: !niri
-    readonly property string name: niri ? "niri" : "hyprland"
+    property string focusedOutput: ""
+    property var workspaces: []     // [{ id, idx, name, output, is_active, is_focused, active_window_id }]
 
-    // niri state, refreshed on every niri event
-    property string niriFocused: ""
-    property var niriWorkspaces: []     // [{ id, idx, name, output, is_active, is_focused, active_window_id }]
+    readonly property var logoutCmd: ["niri", "msg", "action", "quit", "--skip-confirmation"]
 
-    // name of the output (monitor) that currently has focus
-    readonly property string focusedOutput: niri ? niriFocused : (Hyprland.focusedMonitor?.name ?? "")
-
-    readonly property var logoutCmd: niri ? ["niri", "msg", "action", "quit", "--skip-confirmation"] : ["uwsm", "stop"]
-
-    function niriAction(args) {
+    function action(args) {
         Quickshell.execDetached(["niri", "msg", "action"].concat(args));
     }
 
-    function niriRefresh() {
-        if (!niri) return;
+    function refresh() {
         if (!wsProc.running) wsProc.running = true;
         if (!outProc.running) outProc.running = true;
     }
@@ -36,7 +26,7 @@ Singleton {
         command: ["niri", "msg", "--json", "workspaces"]
         stdout: StdioCollector {
             onStreamFinished: {
-                try { root.niriWorkspaces = JSON.parse(text); } catch (err) {}
+                try { root.workspaces = JSON.parse(text); } catch (err) {}
             }
         }
     }
@@ -48,7 +38,7 @@ Singleton {
             onStreamFinished: {
                 try {
                     const o = JSON.parse(text);
-                    root.niriFocused = o ? o.name : "";
+                    root.focusedOutput = o ? o.name : "";
                 } catch (err) {}
             }
         }
@@ -56,7 +46,7 @@ Singleton {
 
     // any niri event -> refresh (debounced)
     Process {
-        running: root.niri
+        running: true
         command: ["niri", "msg", "--json", "event-stream"]
         stdout: SplitParser {
             onRead: line => debounce.restart()
@@ -66,8 +56,8 @@ Singleton {
     Timer {
         id: debounce
         interval: 50
-        onTriggered: root.niriRefresh()
+        onTriggered: root.refresh()
     }
 
-    Component.onCompleted: niriRefresh()
+    Component.onCompleted: refresh()
 }

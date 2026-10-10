@@ -3,13 +3,12 @@ import Quickshell
 import Quickshell.Wayland
 import qs.services
 
-// Invisible helper window for two jobs:
-//  1. capture ONE window by itself (Hyprland toplevel export) -> PNG
-//  2. crop a region out of the pre-selection freeze frame -> PNG (so the overlay can never bleed in)
+// Invisible helper: crops a region out of the pre-selection freeze frame -> PNG
+// (so the selector overlay can never bleed into the screenshot).
 PanelWindow {
     id: win
 
-    visible: Capture.grabbing || Capture.cropping
+    visible: Capture.cropping
 
     implicitWidth: 1
     implicitHeight: 1
@@ -20,34 +19,9 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
     mask: Region {}
-    WlrLayershell.namespace: "notch-grab"
+    WlrLayershell.namespace: "notch-crop"
     WlrLayershell.layer: WlrLayer.Background
 
-    // ── single window ──
-    function save() {
-        if (!Capture.grabbing) return;
-        sv.grabToImage(r => Capture.grabbed(r.saveToFile(Capture.shotPath)));
-    }
-
-    Timer {
-        id: saveTimer
-        interval: 80
-        onTriggered: win.save()
-    }
-
-    ScreencopyView {
-        id: sv
-        captureSource: Capture.grabToplevel
-        live: false
-        paintCursor: false
-        width: sourceSize.width
-        height: sourceSize.height
-
-        onCaptureSourceChanged: if (captureSource) Qt.callLater(() => sv.captureFrame())
-        onHasContentChanged: if (hasContent && Capture.grabbing) saveTimer.restart()
-    }
-
-    // ── region crop from the freeze frame ──
     function crop() {
         if (!Capture.cropping || cropImg.status !== Image.Ready) return;
         const s = cropImg.implicitWidth / Math.max(1, Capture.cropScrW);      // physical px per logical px
