@@ -4,9 +4,11 @@ import QtQuick.Shapes
 import Quickshell
 import Quickshell.Hyprland
 import qs.common
+import qs.services
 
 // Workspace indicator attached to the top-left corner of the screen border.
-// Collapsed: current workspace (or open special workspace). Hover: shows all of them.
+// Collapsed: current workspace. Hover: all of them.
+// Hyprland: workspaces 1-5 per page + your special workspaces. Niri: this monitor's workspaces.
 Item {
     id: root
 
@@ -17,10 +19,21 @@ Item {
     readonly property real t: Look.border
     readonly property real r: 18
 
+    readonly property bool niri: Compositor.niri
+
+    // hyprland
     readonly property var mon: Hyprland.monitorFor(screen)
     readonly property int activeId: mon?.activeWorkspace?.id ?? 1
     readonly property int page: Math.floor((Math.max(1, activeId) - 1) / 5) * 5 + 1
     property string special: ""      // open special workspace, without the "special:" prefix
+
+    // niri: this output's workspaces, in order
+    readonly property var nws: Compositor.niriWorkspaces.filter(w => w.output === screen.name).sort((a, b) => a.idx - b.idx)
+    readonly property var nActive: nws.find(w => w.is_active) ?? null
+
+    readonly property int count: niri ? Math.max(1, nws.length) : 5
+    readonly property int activeNum: niri ? (nActive?.idx ?? 1) : activeId
+
     property bool expanded: false
     property bool shown: false
 
@@ -55,7 +68,7 @@ Item {
         special = (mon?.lastIpcObject?.specialWorkspace?.name ?? "").replace(/^special:/, "");
     }
 
-    // activespecial>>special:NAME,MONITOR  (NAME empty when it closes)
+    // hyprland: activespecial>>special:NAME,MONITOR  (NAME empty when it closes)
     Connections {
         target: Hyprland
         function onRawEvent(event) {
@@ -100,9 +113,11 @@ Item {
     }
 
     WheelHandler {
-        onWheel: e => Hyprland.dispatch(e.angleDelta.y > 0
-            ? 'hl.dsp.focus({ workspace = "e-1" })'
-            : 'hl.dsp.focus({ workspace = "e+1" })')
+        onWheel: e => {
+            const up = e.angleDelta.y > 0;
+            if (root.niri) Compositor.niriAction([up ? "focus-workspace-up" : "focus-workspace-down"]);
+            else Hyprland.dispatch(up ? 'hl.dsp.focus({ workspace = "e-1" })' : 'hl.dsp.focus({ workspace = "e+1" })');
+        }
     }
 
     // ── body shape (concave ears into the top + left borders) ──
@@ -152,7 +167,7 @@ Item {
             spacing: 8
 
             InkIcon {
-                text: root.special !== "" ? root.specialInfo(root.special).glyph : "\uf009"
+                text: !root.niri && root.special !== "" ? root.specialInfo(root.special).glyph : "\uf009"
                 pixelSize: 13
                 box: 20
                 color: Look.primary
@@ -160,9 +175,9 @@ Item {
             Label {
                 font.bold: true
                 font.pixelSize: 13
-                text: root.special !== ""
+                text: !root.niri && root.special !== ""
                     ? (root.expanded ? "Special · " : "") + root.specialInfo(root.special).label
-                    : (root.expanded ? "Workspace " : "") + root.activeId
+                    : (root.expanded ? "Workspace " : "") + (root.niri ? (root.nActive?.name || root.activeNum) : root.activeNum)
             }
         }
 
@@ -175,15 +190,17 @@ Item {
             Behavior on opacity { Anim { duration: 200; curve: Look.standard } }
 
             Repeater {
-                model: 5
+                model: root.count
 
                 Rectangle {
                     id: cell
 
                     required property int index
-                    readonly property int wsId: root.page + index
-                    readonly property bool current: root.activeId === wsId
-                    readonly property bool on: current && root.special === ""
+                    readonly property int wsId: root.page + index                       // hyprland
+                    readonly property var nw: root.niri ? (root.nws[index] ?? null) : null   // niri
+                    readonly property bool current: root.niri ? (nw?.is_active ?? false) : root.activeId === wsId
+                    readonly property bool on: current && (root.niri || root.special === "")
+                    readonly property bool occupied: root.niri ? (nw?.active_window_id != null) : root.hasWs(wsId)
 
                     Layout.preferredWidth: 28
                     Layout.preferredHeight: 28
@@ -195,21 +212,26 @@ Item {
 
                     Label {
                         anchors.centerIn: parent
-                        text: cell.wsId
+                        text: root.niri ? (cell.nw ? cell.nw.idx : cell.index + 1) : cell.wsId
                         font.pixelSize: 12
                         font.bold: cell.on
-                        color: cell.on ? Look.primaryFg : (root.hasWs(cell.wsId) ? Look.fg : Look.fgDim)
+                        color: cell.on ? Look.primaryFg : (cell.occupied ? Look.fg : Look.fgDim)
                     }
                     MouseArea {
                         id: cm
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: Hyprland.dispatch("hl.dsp.focus({ workspace = " + cell.wsId + " })")
+                        onClicked: {
+                            if (root.niri) Compositor.niriAction(["focus-workspace", String(cell.nw ? cell.nw.idx : cell.index + 1)]);
+                            else Hyprland.dispatch("hl.dsp.focus({ workspace = " + cell.wsId + " })");
+                        }
                     }
                 }
             }
 
+            // special workspaces: Hyprland only
             Rectangle {
+                visible: !root.niri
                 Layout.preferredWidth: 1
                 Layout.preferredHeight: 16
                 Layout.leftMargin: 4
@@ -218,7 +240,7 @@ Item {
             }
 
             Repeater {
-                model: root.specials
+                model: root.niri ? [] : root.specials
 
                 Rectangle {
                     id: scell

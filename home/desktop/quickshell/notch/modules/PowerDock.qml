@@ -20,7 +20,7 @@ Item {
     // edit these if your setup differs
     readonly property var commands: ({
         lock: ["loginctl", "lock-session"],
-        logout: ["uwsm", "stop"],
+        logout: Compositor.logoutCmd,
         suspend: ["systemctl", "suspend"],
         reboot: ["systemctl", "reboot"],
         poweroff: ["systemctl", "poweroff"]

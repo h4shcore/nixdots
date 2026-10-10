@@ -62,7 +62,7 @@ Singleton {
     }
 
     function focusScreen() {
-        return Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0];
+        return Quickshell.screens.find(s => s.name === Compositor.focusedOutput) ?? Quickshell.screens[0];
     }
 
     function stamp() { return Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss"); }
@@ -124,6 +124,12 @@ Singleton {
     }
 
     function finishWindow(c) {
+        // niri has no per-window capture protocol: crop the window's rectangle like a region instead
+        if (Compositor.niri) {
+            const scr = selectScreen;
+            finishRect(scr, c.x - scr.x, c.y - scr.y, c.w, c.h);
+            return;
+        }
         selecting = false;
         dropFreeze();
         arm({ x: Math.round(c.x), y: Math.round(c.y), w: Math.round(c.w), h: Math.round(c.h), output: "", address: c.address });
@@ -266,8 +272,12 @@ Singleton {
             } else {
                 if (root.target === "window") {
                     root.windows = [];
-                    Hyprland.refreshToplevels();
-                    winProc.running = true;
+                    if (Compositor.niri) {
+                        niriWinProc.running = true;
+                    } else {
+                        Hyprland.refreshToplevels();
+                        winProc.running = true;
+                    }
                 }
                 root.freezePath = root.runtimeDir + "/notch-freeze-" + root.stamp() + ".png";
                 freezeProc.command = ["grim", "-o", scr.name, root.freezePath];
@@ -350,7 +360,46 @@ Singleton {
         }
     }
 
-    // windows on the focused monitor: its active workspace + its open special workspace (on top)
+    // niri: windows visible on the focused monitor's active workspace
+    Process {
+        id: niriWinProc
+        command: ["sh", "-c", "niri msg --json outputs; echo '@@@'; niri msg --json windows; echo '@@@'; niri msg --json workspaces"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const parts = text.split("@@@");
+                    const outs = JSON.parse(parts[0]);
+                    const wins = JSON.parse(parts[1]);
+                    const wss = JSON.parse(parts[2]);
+                    const scr = root.selectScreen;
+                    const out = outs[scr.name];
+                    const lg = out ? out.logical : null;
+                    const ws = wss.find(w => w.output === scr.name && w.is_active);
+                    if (!lg || !ws) {
+                        root.windows = [];
+                        return;
+                    }
+                    root.windows = wins
+                        .filter(w => w.workspace_id === ws.id && w.layout && w.layout.tile_pos_in_workspace_view)
+                        .map(w => ({
+                            x: lg.x + w.layout.tile_pos_in_workspace_view[0] + w.layout.window_offset_in_tile[0],
+                            y: lg.y + w.layout.tile_pos_in_workspace_view[1] + w.layout.window_offset_in_tile[1],
+                            w: w.layout.window_size[0],
+                            h: w.layout.window_size[1],
+                            title: w.title || w.app_id || "window",
+                            floating: w.is_floating,
+                            focused: w.is_focused
+                        }))
+                        .sort((a, b) => (b.floating - a.floating) || (b.focused - a.focused));
+                } catch (err) {
+                    console.warn("Capture: could not read niri windows:", err);
+                    root.windows = [];
+                }
+            }
+        }
+    }
+
+    // hyprland: windows on the focused monitor: its active workspace + its open special workspace (on top)
     Process {
         id: winProc
         command: ["sh", "-c", "hyprctl -j monitors; echo '@@@'; hyprctl -j clients"]

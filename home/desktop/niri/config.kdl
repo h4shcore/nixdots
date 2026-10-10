@@ -66,7 +66,7 @@ window-rule {
 }
 
 window-rule {
-    geometry-corner-radius 0
+    geometry-corner-radius 18
     clip-to-geometry true
 }
 
@@ -99,13 +99,19 @@ cursor {
 }
 
 spawn-sh-at-startup "awww-daemon"
-spawn-sh-at-startup "waybar"
+// spawn-sh-at-startup "waybar"
+spawn-sh-at-startup "qs" "-c" "notch"
 spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
 
 binds {
     Mod+Return hotkey-overlay-title="Open a Terminal: kitty " { spawn "kitty"; }
-    Mod+R hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
-    Mod+V hotkey-overlay-title="Open Clipboard" { spawn-sh "cliphist list | fuzzel --dmenu -w 60 | cliphist decode | wl-copy"; }
+    // Mod+R hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+    // Mod+V hotkey-overlay-title="Open Clipboard" { spawn-sh "cliphist list | fuzzel --dmenu -w 60 | cliphist decode | wl-copy"; }
+    Mod+R { spawn-sh "qs" "-c" "notch" "ipc" "call" "launcher" "toggle"; }
+    Mod+V { spawn-sh "qs" "-c" "notch" "ipc" "call" "clipboard" "toggle"; }
+    Mod+W { spawn-sh "qs" "-c" "notch" "ipc" "call" "wallpaper" "toggle"; }
+    Mod+Backspace { spawn-sh "qs" "-c" "notch" "ipc" "call" "power" "toggle"; }
+    Mod+Shift+S{ spawn-sh "qs" "-c" "notch" "ipc" "call" "capture" "toggle"; }
     Mod+B hotkey-overlay-title="Open woomer" { spawn-sh "woomer"; }
 
     XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+ -l 1.0"; }
@@ -219,10 +225,14 @@ binds {
     Mod+Shift+Space  { toggle-window-floating; }
     Mod+Space        { switch-focus-between-floating-and-tiling; }
 
-    Print { screenshot; }
-    Ctrl+Print { screenshot-screen; }
-    Alt+Print { screenshot-window; }
-
+    // Print { screenshot; }
+    // Ctrl+Print { screenshot-screen; }
+    // Alt+Print { screenshot-window; }
+    
+    Print           { spawn-sh "qs" "-c" "notch" "ipc" "call" "capture" "region"; }
+    Shift+Print     { spawn-sh "qs" "-c" "notch" "ipc" "call" "capture" "fullscreen"; }
+    Mod+Print       { spawn-sh "qs" "-c" "notch" "ipc" "call" "capture" "record"; }
+    
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
 
     Mod+Shift+M { quit; }

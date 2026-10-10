@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import QtQuick.Shapes
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import qs.common
 import qs.services
 
@@ -27,7 +26,7 @@ PanelWindow {
     }
 
     // toasts only on the monitor you're working on
-    readonly property bool focusedHere: (Hyprland.focusedMonitor?.name ?? screen.name) === screen.name
+    readonly property bool focusedHere: (Compositor.focusedOutput || screen.name) === screen.name
 
     // song toast replaces the clock while it shows
     readonly property bool songShowing: !expanded && songShown
