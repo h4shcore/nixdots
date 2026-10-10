@@ -4,7 +4,6 @@
   ...
 }: {
   imports = [
-    ./yazi
     ./tmux
   ];
 

@@ -30,11 +30,11 @@ unset_main = { bg = "{{colors.tertiary.default.hex}}", fg = "{{colors.on_tertiar
 unset_alt = { fg = "{{colors.tertiary.default.hex}}", bg = "{{colors.surface_container.default.hex}}" }
 
 [indicator]
-padding = { open = "█", close = "█" }
+# padding = { open = "█", close = "█" }
 
 [status]
-sep_left = { open = "█", close = "█" }
-sep_right = { open = "█", close = "█" }
+# sep_left = { open = "█", close = "█" }
+# sep_right = { open = "█", close = "█" }
 perm_type = { fg = "{{colors.tertiary.default.hex}}" }
 perm_read = { fg = "{{colors.secondary.default.hex}}" }
 perm_write = { fg = "{{colors.error.default.hex}}" }
