@@ -1,5 +1,6 @@
 {
   config,
+  pkgs,
   ...
 }: {
   services.xserver.videoDrivers = ["nvidia"];
@@ -7,6 +8,12 @@
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
+    extraPackages = with pkgs; [
+      intel-media-driver   # Intel iGPU VA-API driver (Broadwell and newer)
+      intel-vaapi-driver   # Fallback for older Intel chips
+      libvdpau-va-gl
+      nvidia-vaapi-driver  # Allows VA-API translation on Nvidia
+    ];
   };
 
   hardware.nvidia = {
