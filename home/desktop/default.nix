@@ -16,7 +16,6 @@
     quickshell
     grim
     wl-screenrec
-    hyprlock
   ];
 
   imports = [
