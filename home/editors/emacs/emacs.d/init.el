@@ -315,6 +315,7 @@
     "m t" '(go-test-current-project :which-key "test")
     "m r" '(go-run :which-key "run")))
 (use-package typescript-mode)
+(use-package fish-mode)
 
 ;; search
 (use-package rg

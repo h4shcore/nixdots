@@ -1,4 +1,5 @@
 include "colors.kdl"
+include "effects.kdl"
 
 input {
     keyboard {
@@ -65,10 +66,10 @@ window-rule {
     open-floating true
 }
 
-window-rule {
-    geometry-corner-radius 18
-    clip-to-geometry true
-}
+// window-rule {
+//     geometry-corner-radius 18
+//     clip-to-geometry true
+// }
 
 cursor {
     xcursor-theme "Bibata-Original-Classic"

@@ -18,8 +18,16 @@ zoxide init fish | source
 starship init fish | source
 
 # env vars
-set -gx EDITOR hx
+set -gx EDITOR "emacsclient -t -a 'emacs'"
 # set -gx MANPAGER "sh -c 'col -bx | hx'"
+function man
+    if test (count $argv) -eq 0
+        command man
+    else
+        # Sets the notifier to 'bully (takes over the full screen) before evaluating the man page
+        emacsclient -t -a 'emacs' --eval "(setq Man-notify-method 'bully)" --eval "(man \"$argv\")"
+    end
+end
 
 # alias
 # alias ls='eza --icons --group-directories-first -1'

@@ -1,0 +1,43 @@
+spawn-at-startup "awww-daemon" "--namespace" "backdrop"
+spawn-at-startup "sh" "-c" "sleep 1 && wall-backdrop --restore"
+
+layout {
+    background-color "transparent"
+}
+
+layer-rule {
+    match namespace="^awww-daemonbackdrop$"      // confirm with: niri msg layers
+    place-within-backdrop true
+}
+
+blur {
+    passes 3
+    offset 3.0
+    noise 0.02
+    saturation 1.2
+}
+
+window-rule {
+    geometry-corner-radius 14
+    clip-to-geometry true
+    opacity 0.9
+    background-effect {
+        blur true
+        xray false 
+    }
+}
+
+window-rule {
+    match app-id="mpv"
+    opacity 1.0
+}
+
+// fix for terminal blurs
+window-rule {
+    match app-id=r#"^org\.wezfurlong\.wezterm$"#
+    match app-id="Alacritty"
+    match app-id="zen"
+    match app-id="com.mitchellh.ghostty"
+    match app-id="kitty"
+    draw-border-with-background false
+}
