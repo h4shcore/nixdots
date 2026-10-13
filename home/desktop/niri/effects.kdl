@@ -18,6 +18,7 @@ blur {
 }
 
 window-rule {
+    draw-border-with-background false
     geometry-corner-radius 14
     clip-to-geometry true
     opacity 0.9
@@ -33,11 +34,11 @@ window-rule {
 }
 
 // fix for terminal blurs
-window-rule {
-    match app-id=r#"^org\.wezfurlong\.wezterm$"#
-    match app-id="Alacritty"
-    match app-id="zen"
-    match app-id="com.mitchellh.ghostty"
-    match app-id="kitty"
-    draw-border-with-background false
-}
+// window-rule {
+//     match app-id=r#"^org\.wezfurlong\.wezterm$"#
+//     match app-id="Alacritty"
+//     match app-id="zen"
+//     match app-id="com.mitchellh.ghostty"
+//     match app-id="kitty"
+//     draw-border-with-background false
+// }
