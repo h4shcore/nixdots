@@ -2,11 +2,13 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Shapes
 import Quickshell
+import Quickshell.Widgets
 import qs.common
 import qs.services
 
 // Niri workspaces, attached to the top-left corner of the screen border.
-// Collapsed: current workspace. Hover: every workspace on this monitor (click to switch, scroll to move).
+// Collapsed: current workspace + the title of its active window. Hover: every workspace on this monitor
+// (click to switch, scroll to move); hovering a workspace previews its active window title.
 Item {
     id: root
 
@@ -25,6 +27,19 @@ Item {
 
     property bool expanded: false
     property bool shown: false
+
+    // hovered workspace cell (-1 = none): the header previews that workspace
+    property int peek: -1
+    readonly property var shownWs: peek >= 0 ? (nws[peek] ?? null) : cur
+    readonly property var shownWin: Compositor.windowById(shownWs?.active_window_id)
+    readonly property string winTitle: shownWin?.title ?? ""
+    readonly property string winApp: shownWin?.app_id ?? ""
+
+    function appIcon(id) {
+        if (!id) return "";
+        const n = id.toLowerCase();
+        return Quickshell.iconPath(n, Quickshell.iconPath(id, "application-x-executable"));
+    }
 
     Component.onCompleted: shown = true
 
@@ -120,7 +135,28 @@ Item {
             Label {
                 font.bold: true
                 font.pixelSize: 13
-                text: (root.expanded ? "Workspace " : "") + (root.cur?.name || root.activeNum)
+                text: (root.expanded ? "Workspace " : "") + (root.shownWs?.name || root.shownWs?.idx || root.activeNum)
+            }
+
+            // active window: divider, app icon, title
+            Rectangle {
+                visible: root.winTitle !== "" || (root.peek >= 0 && root.expanded)
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: 14
+                color: Look.outline
+            }
+            IconImage {
+                visible: root.winTitle !== ""
+                Layout.preferredWidth: 16
+                Layout.preferredHeight: 16
+                source: root.appIcon(root.winApp)
+            }
+            Label {
+                visible: text !== ""
+                Layout.maximumWidth: 240
+                font.pixelSize: 12
+                color: Look.fgDim
+                text: root.winTitle !== "" ? root.winTitle : (root.peek >= 0 ? "Empty" : "")
             }
         }
 
@@ -160,6 +196,10 @@ Item {
                         id: cm
                         anchors.fill: parent
                         hoverEnabled: true
+                        onContainsMouseChanged: {
+                            if (containsMouse) root.peek = cell.index;
+                            else if (root.peek === cell.index) root.peek = -1;
+                        }
                         onClicked: Compositor.action(["focus-workspace", String(cell.nw ? cell.nw.idx : cell.index + 1)])
                     }
                 }

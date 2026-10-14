@@ -8,6 +8,8 @@ import qs.services
 
 // App launcher growing out of the bottom border (centered).
 // Type to search, Up/Down (or Ctrl+J/K, Tab) to move, Enter to launch, Esc to close.
+// Modes: "=2+2*3" calculator (math is also auto-detected), ":fire" emoji picker (Enter copies the result),
+// ">cmd" runs a shell command in a terminal (Ctrl+Enter: silently in the background).
 Item {
     id: root
 
@@ -17,7 +19,19 @@ Item {
 
     readonly property bool open: LauncherState.open && LauncherState.mode === "apps" && active
     property string query: ""
-    readonly property var results: Apps.search(query)
+    readonly property string mode: query.startsWith(":") ? "emoji" : query.startsWith("=") ? "calc" : query.startsWith(">") ? "cmd" : "apps"
+    readonly property var results: {
+        const q = query;
+        if (mode === "emoji") return Emoji.search(q.slice(1));
+        if (mode === "cmd") return Cmd.rows(q.slice(1));
+        if (mode === "calc") {
+            const c = Calc.force(q.slice(1));
+            return c ? [c] : [];
+        }
+        const c = Calc.auto(q);
+        const apps = Apps.search(q);
+        return c ? [c, ...apps] : apps;
+    }
     readonly property bool empty: results.length === 0
 
     readonly property real e: Look.earRadius
@@ -60,9 +74,29 @@ Item {
         LauncherState.hide();
     }
 
-    function launchCurrent() {
-        const r = root.results[lv.currentIndex];
-        if (r) root.launch(r.entry);
+    // apps launch; calculator results and emoji are copied to the clipboard
+    function activate(r, background) {
+        if (!r) return;
+        if (r.kind === "cmd") {
+            Cmd.run(r.text, !background);
+            LauncherState.hide();
+        } else if (r.kind === "calc" || r.kind === "emoji") {
+            Quickshell.execDetached(["wl-copy", "--", r.text]);
+            LauncherState.hide();
+        } else {
+            root.launch(r.entry);
+        }
+    }
+
+    function launchCurrent(background) {
+        root.activate(root.results[lv.currentIndex], background === true);
+    }
+
+    // IPC can open the launcher straight into a mode (preset "=" or ":")
+    function applyPreset() {
+        input.text = LauncherState.preset;
+        LauncherState.preset = "";
+        input.cursorPosition = input.text.length;
     }
 
     function move(delta) {
@@ -75,9 +109,16 @@ Item {
         settled = false;
         settleTimer.restart();
         if (open) {
-            input.text = "";
+            applyPreset();
             lv.currentIndex = 0;
             focusTimer.restart();
+        }
+    }
+
+    Connections {
+        target: LauncherState
+        function onPresetChanged() {
+            if (root.open && LauncherState.preset !== "") root.applyPreset();
         }
     }
     onQueryChanged: lv.currentIndex = 0
@@ -152,7 +193,7 @@ Item {
                 InkIcon {
                     x: 12
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "\uf002"
+                    text: root.mode === "emoji" ? "\uf118" : root.mode === "calc" ? "\uf1ec" : root.mode === "cmd" ? "\uf120" : "\uf002"
                     color: Look.primary
                     pixelSize: 16
                     box: 28
@@ -184,7 +225,7 @@ Item {
                             root.move(-1);
                             ev.accepted = true;
                         } else if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) {
-                            root.launchCurrent();
+                            root.launchCurrent(ctrl && root.mode === "cmd");
                             ev.accepted = true;
                         } else if (ev.key === Qt.Key_Escape) {
                             LauncherState.hide();
@@ -197,7 +238,7 @@ Item {
                     anchors.left: input.left
                     anchors.verticalCenter: parent.verticalCenter
                     visible: input.text === ""
-                    text: "Search apps…"
+                    text: "Search apps…   = calc  ·  : emoji  ·  > run"
                     color: Look.fgDim
                     font.pixelSize: 15
                 }
@@ -206,7 +247,10 @@ Item {
                     anchors.right: parent.right
                     anchors.rightMargin: 20
                     anchors.verticalCenter: parent.verticalCenter
-                    text: root.results.length + (root.query === "" ? " apps" : " found")
+                    text: root.mode === "calc" ? "calculator"
+                        : root.mode === "cmd" ? "terminal"
+                        : root.mode === "emoji" ? root.results.length + " emoji"
+                        : root.results.length + (root.query === "" ? " apps" : " found")
                     color: Look.fgDim
                     font.pixelSize: 11
                 }
@@ -239,6 +283,7 @@ Item {
                     required property var modelData
                     required property int index
                     readonly property bool current: ListView.isCurrentItem
+                    readonly property string kind: modelData.kind ?? "app"
 
                     width: ListView.view.width
                     height: root.rowH
@@ -260,11 +305,62 @@ Item {
                         spacing: 12
 
                         IconImage {
+                            visible: row.kind === "app"
                             Layout.preferredWidth: 34
                             Layout.preferredHeight: 34
-                            source: root.iconFor(row.modelData.entry)
+                            source: row.kind === "app" ? root.iconFor(row.modelData.entry) : ""
                             scale: row.current ? 1.08 : 1
                             Behavior on scale { Anim { duration: Look.dur.fast } }
+                        }
+
+                        // emoji glyph
+                        Item {
+                            visible: row.kind === "emoji"
+                            Layout.preferredWidth: 34
+                            Layout.preferredHeight: 34
+                            scale: row.current ? 1.12 : 1
+                            Behavior on scale { Anim { duration: Look.dur.fast } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: row.modelData.char ?? ""
+                                font.family: "Noto Color Emoji"
+                                font.pixelSize: 24
+                            }
+                        }
+
+                        // command badge
+                        Rectangle {
+                            visible: row.kind === "cmd"
+                            Layout.preferredWidth: 34
+                            Layout.preferredHeight: 34
+                            radius: 17
+                            color: Look.secondaryContainer
+
+                            Label {
+                                anchors.centerIn: parent
+                                text: "›_"
+                                color: Look.primary
+                                font.bold: true
+                                font.pixelSize: 14
+                            }
+                        }
+
+                        // calculator badge
+                        Rectangle {
+                            visible: row.kind === "calc"
+                            Layout.preferredWidth: 34
+                            Layout.preferredHeight: 34
+                            radius: 17
+                            color: Look.primary
+
+                            Label {
+                                anchors.centerIn: parent
+                                text: "="
+                                color: Look.primaryFg
+                                font.bold: true
+                                font.pixelSize: 18
+                            }
                         }
 
                         ColumnLayout {
@@ -273,14 +369,19 @@ Item {
 
                             Label {
                                 Layout.fillWidth: true
-                                text: row.modelData.entry.name
+                                text: row.kind === "app" ? row.modelData.entry.name
+                                    : row.kind === "calc" || row.kind === "cmd" ? row.modelData.title
+                                    : row.modelData.name
                                 font.bold: true
-                                font.pixelSize: 14
+                                font.pixelSize: row.kind === "calc" ? 17 : 14
                             }
                             Label {
                                 Layout.fillWidth: true
                                 visible: text !== ""
-                                text: row.modelData.entry.comment || row.modelData.entry.genericName || ""
+                                text: row.kind === "app" ? (row.modelData.entry.comment || row.modelData.entry.genericName || "")
+                                    : row.kind === "calc" ? row.modelData.subtitle + "  ·  Enter to copy"
+                                    : row.kind === "cmd" ? row.modelData.subtitle
+                                    : (row.modelData.keys || "Enter to copy")
                                 color: Look.fgDim
                                 font.pixelSize: 11
                             }
@@ -288,7 +389,7 @@ Item {
 
                         // frequently used marker
                         RowLayout {
-                            visible: row.modelData.uses >= 2
+                            visible: row.kind === "app" && row.modelData.uses >= 2
                             spacing: 5
 
                             Icon {
@@ -308,7 +409,7 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         onPositionChanged: lv.currentIndex = row.index
-                        onClicked: root.launch(row.modelData.entry)
+                        onClicked: mouse => root.activate(row.modelData, (mouse.modifiers & Qt.ControlModifier) !== 0)
                     }
                 }
 
@@ -320,7 +421,10 @@ Item {
             y: 14 + 46 + 10 + 12
             visible: root.empty
             opacity: root.open ? 1 : 0
-            text: root.query === "" ? "No applications found" : "No apps match “" + root.query + "”"
+            text: root.mode === "calc" ? "Type an expression, e.g. 12*(3+4)"
+                : root.mode === "cmd" ? "Type a command, e.g. htop"
+                : root.mode === "emoji" ? "No emoji match “" + root.query.slice(1) + "”"
+                : root.query === "" ? "No applications found" : "No apps match “" + root.query + "”"
             color: Look.fgDim
         }
     }

@@ -1,13 +1,11 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Effects
 import Quickshell.Widgets
 import Quickshell.Services.Mpris
 import qs.common
 import qs.services
 
-// Now-playing card: blurred album-art backdrop, bouncing art tile, equalizer bars,
-// morphing play button, animated track changes.
+// Compact now-playing card: art, title/artist, slim progress, centered controls.
 ClippingRectangle {
     id: root
 
@@ -20,7 +18,7 @@ ClippingRectangle {
         return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
     }
 
-    implicitHeight: col.implicitHeight + 32
+    implicitHeight: col.implicitHeight + 28
     radius: 24
     color: Look.surfaceHi
 
@@ -32,35 +30,17 @@ ClippingRectangle {
         onTriggered: if (root.p) root.p.positionChanged()
     }
 
-    // ── blurred backdrop ──
-    Image {
-        id: bgSrc
-        visible: false
-        width: root.width
-        height: root.height
-        source: root.p?.trackArtUrl ?? ""
-        sourceSize: Qt.size(160, 160)
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: true
-    }
-    MultiEffect {
-        anchors.fill: parent
-        source: bgSrc
-        blurEnabled: true
-        blurMax: 48
-        blur: 1
-        saturation: 0.4
-        brightness: -0.1
-        opacity: bgSrc.status === Image.Ready ? 1 : 0
-        Behavior on opacity { Anim { duration: 400; curve: Look.standard } }
-    }
+    // soft primary wash from the left edge
     Rectangle {
         anchors.fill: parent
-        color: Look.surfaceHi
-        opacity: 0.6
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0; color: Qt.alpha(Look.primary, 0.12) }
+            GradientStop { position: 0.8; color: Qt.alpha(Look.primary, 0) }
+        }
     }
 
-    // pop + fade whenever the track changes
+    // fade + lift whenever the track changes
     ParallelAnimation {
         id: trackAnim
         Anim { target: info; property: "opacity"; from: 0; to: 1; duration: 300; curve: Look.standard }
@@ -78,9 +58,9 @@ ClippingRectangle {
             left: parent.left
             right: parent.right
             top: parent.top
-            margins: 16
+            margins: 14
         }
-        spacing: 12
+        spacing: 10
 
         // ── art + info ──
         RowLayout {
@@ -89,18 +69,18 @@ ClippingRectangle {
 
             ClippingRectangle {
                 id: tile
-                Layout.preferredWidth: 88
-                Layout.preferredHeight: 88
-                radius: 22
+                Layout.preferredWidth: 68
+                Layout.preferredHeight: 68
+                radius: 18
                 color: Look.surfaceHiest
-                scale: root.playing ? 1 : 0.92
+                scale: root.playing ? 1 : 0.94
                 Behavior on scale { Anim {} }
 
                 Image {
                     id: art
                     anchors.fill: parent
                     source: root.p?.trackArtUrl ?? ""
-                    sourceSize: Qt.size(256, 256)
+                    sourceSize: Qt.size(192, 192)
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     opacity: status === Image.Ready ? 1 : 0
@@ -110,7 +90,7 @@ ClippingRectangle {
                     anchors.centerIn: parent
                     visible: art.status !== Image.Ready
                     text: "\uf001"
-                    font.pixelSize: 30
+                    font.pixelSize: 26
                     color: Look.fgDim
                 }
             }
@@ -118,11 +98,11 @@ ClippingRectangle {
             ColumnLayout {
                 id: info
                 Layout.fillWidth: true
-                spacing: 3
+                spacing: 2
                 transform: Translate { id: infoShift }
 
                 RowLayout {
-                    spacing: 8
+                    spacing: 7
 
                     // equalizer bars
                     Row {
@@ -133,22 +113,22 @@ ClippingRectangle {
                             Item {
                                 required property int modelData
                                 width: 3
-                                height: 14
+                                height: 12
 
                                 Rectangle {
                                     id: bar
                                     anchors.bottom: parent.bottom
                                     width: 3
-                                    height: 4
+                                    height: 3
                                     radius: 1.5
                                     color: Look.primary
 
                                     SequentialAnimation {
                                         running: root.playing
                                         loops: Animation.Infinite
-                                        onRunningChanged: if (!running) bar.height = 4
-                                        NumberAnimation { target: bar; property: "height"; to: 14; duration: modelData; easing.type: Easing.InOutSine }
-                                        NumberAnimation { target: bar; property: "height"; to: 4; duration: modelData; easing.type: Easing.InOutSine }
+                                        onRunningChanged: if (!running) bar.height = 3
+                                        NumberAnimation { target: bar; property: "height"; to: 12; duration: modelData; easing.type: Easing.InOutSine }
+                                        NumberAnimation { target: bar; property: "height"; to: 3; duration: modelData; easing.type: Easing.InOutSine }
                                     }
                                 }
                             }
@@ -168,56 +148,50 @@ ClippingRectangle {
                     Layout.fillWidth: true
                     text: root.p?.trackTitle || "Nothing playing"
                     font.bold: true
-                    font.pixelSize: 16
-                    wrapMode: Text.Wrap
-                    maximumLineCount: 2
+                    font.pixelSize: 15
                 }
                 Label {
                     Layout.fillWidth: true
                     text: root.p?.trackArtist ?? ""
                     color: Look.fgDim
-                    font.pixelSize: 13
+                    font.pixelSize: 12
                 }
             }
         }
 
-        // ── progress ──
-        ColumnLayout {
+        // ── progress: time · bar · time ──
+        RowLayout {
             Layout.fillWidth: true
-            spacing: 4
+            spacing: 8
 
-            Slider {
+            Label {
+                text: root.fmt(root.p?.position)
+                color: Look.fgDim
+                font.pixelSize: 10
+            }
+            WaveSlider {
                 id: progress
                 Layout.fillWidth: true
-                implicitHeight: 14
+                implicitHeight: 22
+                playing: root.playing
                 value: root.p && root.p.length > 0 ? root.p.position / root.p.length : 0
                 enabled: root.p?.canSeek ?? false
                 onMoved: v => { if (root.p && root.p.canSeek) root.p.position = v * root.p.length; }
             }
-            RowLayout {
-                Layout.fillWidth: true
-
-                Label {
-                    text: root.fmt(root.p?.position)
-                    color: Look.fgDim
-                    font.pixelSize: 11
-                }
-                Item { Layout.fillWidth: true }
-                Label {
-                    text: root.fmt(root.p?.length)
-                    color: Look.fgDim
-                    font.pixelSize: 11
-                }
+            Label {
+                text: root.fmt(root.p?.length)
+                color: Look.fgDim
+                font.pixelSize: 10
             }
         }
 
         // ── controls ──
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
-            spacing: 14
+            spacing: 12
 
             IconButton {
-                size: 42
+                size: 38
                 glyph: "\uf048"
                 enabled: root.p?.canGoPrevious ?? false
                 onClicked: root.p.previous()
@@ -225,10 +199,9 @@ ClippingRectangle {
 
             // play/pause: morphs between circle (paused) and rounded square (playing)
             Rectangle {
-                id: playBtn
-                Layout.preferredWidth: 64
-                Layout.preferredHeight: 48
-                radius: root.playing ? 16 : 24
+                Layout.preferredWidth: 60
+                Layout.preferredHeight: 42
+                radius: root.playing ? 15 : 21
                 color: Look.primary
                 opacity: enabled ? 1 : 0.4
                 enabled: root.p?.canTogglePlaying ?? false
@@ -241,7 +214,7 @@ ClippingRectangle {
                     anchors.centerIn: parent
                     text: root.playing ? "\uf04c" : "\uf04b"
                     color: Look.primaryFg
-                    font.pixelSize: 18
+                    font.pixelSize: 17
                 }
                 MouseArea {
                     id: playMouse
@@ -251,7 +224,7 @@ ClippingRectangle {
             }
 
             IconButton {
-                size: 42
+                size: 38
                 glyph: "\uf051"
                 enabled: root.p?.canGoNext ?? false
                 onClicked: root.p.next()

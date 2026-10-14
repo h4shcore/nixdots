@@ -13,7 +13,7 @@ PanelWindow {
     id: win
 
     property bool expanded: false
-    property string view: "main"   // "main" | "notifs"
+    property string view: "main"   // "main" | "notifs" | "cal"
     property bool shown: false
     property bool songShown: false
     property bool songArmed: false
@@ -31,7 +31,7 @@ PanelWindow {
     // song toast replaces the clock while it shows
     readonly property bool songShowing: !expanded && songShown
 
-    readonly property Item cur: expanded ? (view === "notifs" ? notifPanel : cc) : (songShown ? songToast : null)
+    readonly property Item cur: expanded ? (view === "notifs" ? notifPanel : view === "cal" ? calPanel : cc) : (songShown ? songToast : null)
 
     // notch geometry
     readonly property real pillW: clock.implicitWidth + Look.pad * 2
@@ -282,11 +282,23 @@ PanelWindow {
                 y: Look.border
                 height: Look.pillHeight - Look.border
 
+                // soft highlight behind the clock: click it to peek at the calendar
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: clock.width + 26
+                    height: Look.pillHeight - 10
+                    radius: height / 2
+                    color: Look.fg
+                    opacity: win.expanded && !win.songShowing && !batChip.hovered
+                        ? (clockMouse.containsMouse ? 0.1 : (win.view === "cal" ? 0.07 : 0)) : 0
+                    Behavior on opacity { Anim { duration: 150; curve: Look.standard } }
+                }
+
                 RowLayout {
                     id: clock
                     anchors.centerIn: parent
                     spacing: 12
-                    opacity: win.songShowing ? 0 : 1
+                    opacity: win.songShowing || batChip.hovered ? 0 : 1
                     scale: win.songShowing ? 0.9 : 1
                     Behavior on opacity { Anim { duration: 200; curve: Look.standard } }
                     Behavior on scale { Anim { duration: 200; curve: Look.standard } }
@@ -295,8 +307,20 @@ PanelWindow {
                     Clock {}
                 }
 
-                // battery: small icon + percentage (hover for the time estimate)
-                Chip {
+                // click the clock to toggle the calendar (not while the rec chip owns the clock)
+                MouseArea {
+                    id: clockMouse
+                    anchors.centerIn: parent
+                    width: clock.width + 26
+                    height: Look.pillHeight - 10
+                    enabled: win.expanded && !win.songShowing && !batChip.hovered && !(Capture.recording || Capture.countdown > 0)
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: win.view = win.view === "cal" ? "main" : "cal"
+                }
+
+                // battery: custom pill, eta slides out on hover (clock fades out of the way)
+                BatteryChip {
                     id: batChip
                     anchors.left: parent.left
                     anchors.leftMargin: Look.pad - 6
@@ -305,24 +329,6 @@ PanelWindow {
                     opacity: win.expanded ? 1 : 0
                     enabled: win.expanded
                     Behavior on opacity { Anim { duration: 250; curve: Look.standard } }
-
-                    InkIcon {
-                        text: Battery.icon
-                        pixelSize: 15
-                        box: 22
-                        color: Battery.low ? Look.error : (Battery.charging ? Look.primary : Look.fg)
-                    }
-                    Label {
-                        text: Math.round(Battery.percent) + "%"
-                        font.pixelSize: 12
-                        color: Battery.low ? Look.error : Look.fg
-                    }
-                    Label {
-                        visible: batChip.hovered && Battery.eta !== ""
-                        text: "· " + Battery.eta
-                        font.pixelSize: 11
-                        color: Look.fgDim
-                    }
                 }
 
                 Chip {
@@ -356,6 +362,7 @@ PanelWindow {
                 y: Look.pillHeight
                 width: implicitWidth
                 shown: win.expanded && win.view === "main"
+                onOpenNotifs: win.view = "notifs"
                 opacity: shown ? 1 : 0
                 visible: opacity > 0
                 Behavior on opacity { Anim { duration: 200; curve: Look.standard } }
@@ -369,6 +376,17 @@ PanelWindow {
                 opacity: !win.expanded && win.songShown ? 1 : 0
                 visible: opacity > 0
                 Behavior on opacity { Anim { duration: 250; curve: Look.standard } }
+            }
+
+            CalendarPanel {
+                id: calPanel
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: Look.pillHeight
+                width: implicitWidth
+                shown: win.expanded && win.view === "cal"
+                opacity: shown ? 1 : 0
+                visible: opacity > 0
+                Behavior on opacity { Anim { duration: 200; curve: Look.standard } }
             }
 
             NotifPanel {

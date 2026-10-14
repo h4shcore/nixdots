@@ -9,6 +9,12 @@ Singleton {
 
     property string focusedOutput: ""
     property var workspaces: []     // [{ id, idx, name, output, is_active, is_focused, active_window_id }]
+    property var windows: []        // [{ id, title, app_id, workspace_id, is_focused, ... }]
+
+    function windowById(id) {
+        if (id === null || id === undefined) return null;
+        return windows.find(w => w.id === id) ?? null;
+    }
 
     readonly property var logoutCmd: ["niri", "msg", "action", "quit", "--skip-confirmation"]
 
@@ -19,6 +25,7 @@ Singleton {
     function refresh() {
         if (!wsProc.running) wsProc.running = true;
         if (!outProc.running) outProc.running = true;
+        if (!winProc.running) winProc.running = true;
     }
 
     Process {
@@ -27,6 +34,16 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 try { root.workspaces = JSON.parse(text); } catch (err) {}
+            }
+        }
+    }
+
+    Process {
+        id: winProc
+        command: ["niri", "msg", "--json", "windows"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try { root.windows = JSON.parse(text); } catch (err) {}
             }
         }
     }

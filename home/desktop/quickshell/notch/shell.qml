@@ -10,12 +10,24 @@ ShellRoot {
         PerScreen {}
     }
 
-    // qs -c notch ipc call launcher toggle
+    // qs -c notch ipc call launcher toggle | show | hide | calc | emoji | run
     IpcHandler {
         target: "launcher"
 
         function toggle(): void { LauncherState.toggle(); }
         function show(): void { LauncherState.show(); }
+        function calc(): void {
+            LauncherState.preset = "=";
+            LauncherState.show();
+        }
+        function emoji(): void {
+            LauncherState.preset = ":";
+            LauncherState.show();
+        }
+        function run(): void {
+            LauncherState.preset = ">";
+            LauncherState.show();
+        }
         function hide(): void { LauncherState.hide(); }
     }
 
