@@ -269,6 +269,7 @@
   :hook (rust-mode . eglot-ensure)
   :hook (go-mode . eglot-ensure)
   :hook (typescript-mode . eglot-ensure)
+  :hook (nix-mode . eglot-ensure)
   :general
   (leader-keys
     "l" '(:ignore t :which-key "lsp")
@@ -316,6 +317,8 @@
     "m r" '(go-run :which-key "run")))
 (use-package typescript-mode)
 (use-package fish-mode)
+(use-package nix-mode
+  :mode "\\.nix\\'")
 
 ;; search
 (use-package rg

@@ -17,7 +17,7 @@
     nix-gaming.url = "github:fufexan/nix-gaming";
     vivy.url = "github:h4shcore/vivy";
     nixpkgs-xwayland-satellite-0-8-1.url = "github:nixos/nixpkgs/edfd59b795cd752c36d2dae60870cffcd23d3fb1";
-};
+  };
 
   outputs = inputs @ {
     self,
@@ -26,7 +26,18 @@
     ...
   }: let
     system = "x86_64-linux";
+    pkgs = import nixpkgs {
+      inherit system;
+      config.allowUnfree = true;
+    };
   in {
+    devShells.${system}.default = pkgs.mkShell {
+      packages = with pkgs; [
+        nixd
+        alejandra
+      ];
+    };
+
     nixosConfigurations.zeus = nixpkgs.lib.nixosSystem {
       inherit system;
       specialArgs = {inherit inputs;};
@@ -36,13 +47,8 @@
     };
 
     homeConfigurations.daksh = home-manager.lib.homeManagerConfiguration {
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-      };
-
+      inherit pkgs;
       extraSpecialArgs = {inherit inputs;};
-
       modules = [
         ./home
       ];

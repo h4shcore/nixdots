@@ -1,8 +1,7 @@
-{ pkgs, ... }:
-let
+{pkgs, ...}: let
   wall-backdrop = pkgs.writeShellApplication {
     name = "wall-backdrop";
-    runtimeInputs = [ pkgs.imagemagick ];     # awww is found on PATH from your packages.nix
+    runtimeInputs = [pkgs.imagemagick]; # awww is found on PATH from your packages.nix
     text = ''
       out="''${XDG_CACHE_HOME:-$HOME/.cache}/wall-backdrop.jpg"
 
@@ -17,7 +16,6 @@ let
       exec awww img --namespace backdrop --transition-type fade "$out"
     '';
   };
-in
-{
-  home.packages = [ wall-backdrop ];
+in {
+  home.packages = [wall-backdrop];
 }
