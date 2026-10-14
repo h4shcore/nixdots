@@ -72,7 +72,7 @@ window-rule {
 // }
 
 cursor {
-    xcursor-theme "Bibata-Original-Classic"
+    xcursor-theme "Bibata-Modern-Classic"
     xcursor-size 20
 }
 
