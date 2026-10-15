@@ -160,11 +160,11 @@
         "quickshell": "quickshell"
       },
       "locked": {
-        "lastModified": 1792062485,
-        "narHash": "sha256-cSLGdyyHoy8R7xd7fpUA921rN8qSZyOBfFRspkR706k=",
+        "lastModified": 1792085756,
+        "narHash": "sha256-A+AdIwn7RRoYSr2N4L8Hbkulkaefx9D4o0mIqAoqrN4=",
         "owner": "h4shcore",
         "repo": "haze",
-        "rev": "68374885d43cedce8dd86115cc58900604709e9c",
+        "rev": "3d4866e9e1904099a723a2bc79d46f9ff274cf2d",
         "type": "github"
       },
       "original": {
