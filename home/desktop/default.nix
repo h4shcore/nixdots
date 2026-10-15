@@ -28,7 +28,7 @@
     ./fuzzel
     ./niri
     # ./hypr
-    ./quickshell
+    # ./quickshell
     ./wallpaper
   ];
 

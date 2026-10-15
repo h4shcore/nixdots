@@ -16,6 +16,10 @@
     };
     nix-gaming.url = "github:fufexan/nix-gaming";
     vivy.url = "github:h4shcore/vivy";
+    haze = {
+      url = "github:h4shcore/haze";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixpkgs-xwayland-satellite-0-8-1.url = "github:nixos/nixpkgs/edfd59b795cd752c36d2dae60870cffcd23d3fb1";
   };
 

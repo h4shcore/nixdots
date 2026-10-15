@@ -152,6 +152,27 @@
         "type": "github"
       }
     },
+    "haze": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "quickshell": "quickshell"
+      },
+      "locked": {
+        "lastModified": 1792059961,
+        "narHash": "sha256-rLc9StNJTHKJxQaF0RG4k+LdTDxK4qC4ryvHnXluNtM=",
+        "owner": "h4shcore",
+        "repo": "haze",
+        "rev": "8fe7df1bd94106dd9e0b733c84b72ea28082dedf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "h4shcore",
+        "repo": "haze",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -332,8 +353,30 @@
         "type": "github"
       }
     },
+    "quickshell": {
+      "inputs": {
+        "nixpkgs": [
+          "haze",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791448974,
+        "narHash": "sha256-lPbqsyAD5ZoGFMZ1eqAlTULfeP5Nwhy+XvOowF7BE+E=",
+        "owner": "quickshell-mirror",
+        "repo": "quickshell",
+        "rev": "4f508be500dea6e5732cc3d50382a0048b17e7b1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "quickshell-mirror",
+        "repo": "quickshell",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
+        "haze": "haze",
         "home-manager": "home-manager",
         "nix-doom-emacs-unstraightened": "nix-doom-emacs-unstraightened",
         "nix-gaming": "nix-gaming",
