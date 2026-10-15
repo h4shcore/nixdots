@@ -29,6 +29,7 @@
     ./niri
     # ./hypr
     # ./quickshell
+    ./haze
     ./wallpaper
   ];
 
