@@ -89,6 +89,7 @@ binds {
     Mod+R { spawn-sh "haze ipc call launcher toggle"; }
     Mod+V { spawn-sh "haze ipc call clipboard toggle"; }
     Mod+W { spawn-sh "haze ipc call wallpaper toggle"; }
+    Mod+T { spawn-sh "haze ipc call todo toggle"; }
     Mod+Backspace { spawn-sh "haze ipc call power toggle"; }
     Mod+Shift+S{ spawn-sh "haze ipc call capture toggle"; }
     Mod+B hotkey-overlay-title="Open woomer" { spawn-sh "woomer"; }
