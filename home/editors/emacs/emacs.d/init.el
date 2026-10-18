@@ -1,136 +1,135 @@
-;;; init.el --- -*- lexical-binding: t; -*-; 
+;;; init.el --- -*- lexical-binding: t; -*-
 
-;; ui
-(tool-bar-mode -1)            
-(scroll-bar-mode -1)
-(setq inhibit-splash-screen t)
-(setq use-file-dialog nil)
+;;; Bootstrap ---------------------------------------------------------------
 
-;; straight.el
+(setq custom-file (locate-user-emacs-file "custom.el"))
+
+;; Must be set before straight loads: skip scanning every repo at startup.
+(setq straight-check-for-modifications '(check-on-save find-when-checking)
+      straight-vc-git-default-clone-depth 1)
+
 (defvar bootstrap-version)
 (let ((bootstrap-file
-    (expand-file-name
-      "straight/repos/straight.el/bootstrap.el"
-      (or (bound-and-true-p straight-base-dir)
-        user-emacs-directory)))
-    (bootstrap-version 7))
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
-      (url-retrieve-synchronously
-       "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-       'silent 'inhibit-cookies)
-    (goto-char (point-max))
-    (eval-print-last-sexp)))
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
-;; use-package
 (straight-use-package 'use-package)
-(setq straight-use-package-by-default t)
-(setq use-package-always-defer t)
+(setq straight-use-package-by-default t
+      use-package-always-defer t)
 
-;; disable startup echo
-(use-package emacs
-  :init
-  (setq initial-scratch-message nil)
-  (defun display-startup-echo-area-message ()
-    (message "")))
+(use-package gcmh
+  :demand t
+  :config (gcmh-mode 1))
 
-;; adding alias
-(use-package emacs
-  :init
-  (defalias 'yes-or-no-p 'y-or-n-p))
+;;; Core --------------------------------------------------------------------
 
-;; utf-8
 (use-package emacs
+  :straight nil
+  :custom
+  (use-short-answers t)
+  (initial-scratch-message nil)
+  (ring-bell-function #'ignore)
+  (display-line-numbers-type 'relative)
+  (scroll-conservatively 101)
+  (fast-but-imprecise-scrolling t)
+  (redisplay-skip-fontification-on-input t)
+  (read-process-output-max (* 1024 1024)) ; faster LSP I/O
+  (bidi-inhibit-bpa t)
   :init
-  (set-charset-priority 'unicode)
-  (setq locale-coding-system 'utf-8
-        coding-system-for-read 'utf-8
-        coding-system-for-write 'utf-8)
-  (set-terminal-coding-system 'utf-8)
-  (set-keyboard-coding-system 'utf-8)
-  (set-selection-coding-system 'utf-8)
+  (setq-default indent-tabs-mode nil
+                tab-width 2
+                fill-column 80
+                bidi-paragraph-direction 'left-to-right)
+
+  ;; utf-8 everywhere
+  (set-language-environment "UTF-8")
   (prefer-coding-system 'utf-8)
-  (setq default-process-coding-system '(utf-8-unix . utf-8-unix)))
+  (setq default-process-coding-system '(utf-8-unix . utf-8-unix))
 
-;; tabs width
-(use-package emacs
-  :init
-  (setq-default indent-tabs-mode nil)
-  (setq-default tab-width 2))
+  ;; silence the startup echo-area message
+  (advice-add #'display-startup-echo-area-message :override #'ignore)
 
-;; keybinds for osx and unix
-(use-package emacs
-  :init
-  (cond
-   ((eq system-type 'darwin)
-    (setq mac-command-modifier 'super)
-    (setq mac-option-modifier 'meta)
-    (setq mac-control-modifier 'control))
-   ((eq system-type 'gnu/linux)
-    (setq x-command-modifier 'super)  ; Maps Windows/Super key to Super
-    (setq x-alt-modifier 'meta)       ; Maps Alt key to Meta
-    (setq x-ctrl-modifier 'control)))) ; Keeps Control as Control
+  ;; backups / auto-saves live in the emacs dir, not next to the files
+  (let ((backups (locate-user-emacs-file "backups/"))
+        (autosaves (locate-user-emacs-file "auto-save/")))
+    (make-directory backups t)
+    (make-directory autosaves t)
+    (setq backup-directory-alist `(("." . ,backups))
+          auto-save-file-name-transforms `((".*" ,autosaves t))
+          backup-by-copying t
+          create-lockfiles nil))
 
-;; evil-mode
-(setq evil-want-keybinding nil) ; must be set before evil/evil-collection load
+  (when (eq system-type 'darwin)
+    (setq mac-command-modifier 'super
+          mac-option-modifier 'meta
+          mac-control-modifier 'control))
+
+  (global-set-key (kbd "<escape>") #'keyboard-escape-quit)
+  :hook
+  ((prog-mode . display-line-numbers-mode)
+   (prog-mode . display-fill-column-indicator-mode)
+   (after-init . global-auto-revert-mode)
+   (after-init . savehist-mode)
+   (after-init . save-place-mode)))
+
+;;; Appearance --------------------------------------------------------------
+
+(set-face-attribute 'default nil :font "MapleMono NF" :height 160)
+
+(add-to-list 'custom-theme-load-path "~/.emacs.d/")
+(condition-case err
+    (load-theme 'matugen t)
+  (error (message "matugen theme not loaded: %s" (error-message-string err))))
+
+(set-face-attribute 'fill-column-indicator nil :foreground "#717C7C")
+
+(use-package nerd-icons)
+
+(use-package doom-modeline
+  :hook (after-init . doom-modeline-mode))
+
+(use-package nyan-mode
+  :hook (after-init . nyan-mode))
+
+;;; Evil + leader -----------------------------------------------------------
+
 (use-package evil
-  :demand ; No lazy loading
+  :demand t
   :init
-  (setq evil-want-C-u-scroll t) ; must be set before evil-mode runs
+  (setq evil-want-keybinding nil   ; required by evil-collection
+        evil-want-C-u-scroll t
+        evil-undo-system 'undo-redo)
   :config
   (evil-mode 1))
 
-;; fonts
-(use-package emacs
-  :init
-  (set-face-attribute 'default nil
-    :font "MapleMono NF"
-    :height 160))
-
-;; themes
-(add-to-list 'custom-theme-load-path "~/.emacs.d/")
-(load-theme 'matugen t)
-
-;; number lines
-(use-package emacs
-  :init
-  (defun ab/enable-line-numbers ()
-    "Enable relative line numbers"
-    (interactive)
-    (display-line-numbers-mode)
-    (setq display-line-numbers 'relative))
-  (add-hook 'prog-mode-hook #'ab/enable-line-numbers))
-
-;; doom modeline
-(use-package doom-modeline
-  :init (doom-modeline-mode 1))
-
-;; nerd-icons
-(use-package nerd-icons)
-
-;; cat
-(use-package nyan-mode
-  :init
-  (nyan-mode))
-
-;; project-manager (projectile)
-(use-package projectile
-  :demand
-  :init
-  (projectile-mode +1))
-
-;; which-key
-(use-package which-key
-  :demand
-  :init
-  (setq which-key-idle-delay 0.5) ; Open after .5s instead of 1s
+(use-package evil-collection
+  :after evil
+  :demand t
   :config
-  (which-key-mode))
+  (evil-collection-init))
 
-;; evil-keybinds
+(use-package evil-nerd-commenter
+  :general
+  (general-nvmap
+    "gc" #'evilnc-comment-operator))
+
+(use-package which-key
+  :custom (which-key-idle-delay 0.5)
+  :hook (after-init . which-key-mode))
+
 (use-package general
-  :demand
+  :demand t
   :config
   (general-evil-setup)
 
@@ -140,214 +139,177 @@
     :prefix "SPC"
     :global-prefix "C-SPC")
 
+  ;; Single place for the leader groups; packages add their own keys below.
   (leader-keys
     "x" '(execute-extended-command :which-key "execute command")
     "r" '(restart-emacs :which-key "restart emacs")
-    "i" '((lambda () (interactive) (find-file user-init-file)) :which-key "open init file")
-
-    ;; Buffer
+    "i" '((lambda () (interactive) (find-file user-init-file))
+          :which-key "open init file")
     "b" '(:ignore t :which-key "buffer")
-    ;; Don't show an error because SPC b ESC is undefined, just abort
-    "b <escape>" '(keyboard-escape-quit :which-key t)
-    "bd"  'kill-current-buffer
-  ))
+    "bd" '(kill-current-buffer :which-key "kill buffer")
+    "p" '(:ignore t :which-key "projects")
+    "g" '(:ignore t :which-key "git")
+    "e" '(:ignore t :which-key "envrc")
+    "l" '(:ignore t :which-key "lsp")
+    "m" '(:ignore t :which-key "mode")
+    "c" '(:ignore t :which-key "compile"))
 
-;; projectile keybind
+  ;; Avoid "SPC <group> ESC is undefined" errors; just abort.
+  (dolist (group '("b" "p" "g" "e" "l" "m" "c"))
+    (leader-keys (concat group " <escape>") '(keyboard-escape-quit :which-key t))))
+
+;;; Navigation / projects ---------------------------------------------------
+
+(use-package ivy
+  :hook (after-init . ivy-mode))
+
 (use-package projectile
-  :demand
+  :hook (after-init . projectile-mode)
   :general
   (leader-keys
-    :states 'normal
     "SPC" '(projectile-find-file :which-key "find file")
-
-    ;; Buffers
     "b b" '(projectile-switch-to-buffer :which-key "switch buffer")
-
-    ;; Projects
-    "p" '(:ignore t :which-key "projects")
-    "p <escape>" '(keyboard-escape-quit :which-key t)
     "p p" '(projectile-switch-project :which-key "switch project")
     "p a" '(projectile-add-known-project :which-key "add project")
-    "p r" '(projectile-remove-known-project :which-key "remove project"))
-  :init
-  (projectile-mode +1))
+    "p r" '(projectile-remove-known-project :which-key "remove project")))
 
-;; fuzzy finder
-(use-package ivy
-  :config
-  (ivy-mode))
-
-;; git
-(use-package magit
-  :general
-  (leader-keys
-    "g" '(:ignore t :which-key "git")
-    "g <escape>" '(keyboard-escape-quit :which-key t)
-    "g g" '(magit-status :which-key "status")
-    "g l" '(magit-log :which-key "log"))
-  (general-nmap
-    "<escape>" #'transient-quit-one))
-
-;; evil-collection
-(use-package evil-collection
-  :after evil
-  :demand
-  :config
-  (evil-collection-init))
-
-;; highlight uncommited gutter
-(use-package diff-hl
-  :init
-  (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
-  (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
-  :config
-  (global-diff-hl-mode))
-  
-;; terminal
-(use-package vterm-toggle
-  :general
-  (leader-keys
-    "'" '(vterm-toggle :which-key "terminal")))
-(setq vterm-shell (executable-find "fish"))
-
-;; comments
-(use-package evil-nerd-commenter
-  :general
-  (general-nvmap
-    "gc" 'evilnc-comment-operator))
-
-;; optimize gc
-(use-package gcmh
-  :demand
-  :config
-  (gcmh-mode 1))
-
-;; dont use 'ESC' as the modifier
-(use-package emacs
-  :init
-	(global-set-key (kbd "<escape>") 'keyboard-escape-quit))
-
-;; exec-path-from-shell
-(use-package exec-path-from-shell
-  :init
-  (exec-path-from-shell-initialize))
-
-;; envrc (direnv / nix flake per-project envs)
-(use-package envrc
-  :demand
-  :hook (after-init . envrc-global-mode)
-  :general
-  (leader-keys
-    "e" '(:ignore t :which-key "envrc")
-    "e <escape>" '(keyboard-escape-quit :which-key t)
-    "e r" '(envrc-reload :which-key "reload")
-    "e a" '(envrc-allow :which-key "allow")
-    "e d" '(envrc-deny :which-key "deny")))
-
-;; ruler for 80 chars
-(use-package emacs
-  :init
-  (setq-default fill-column 80)
-  (set-face-attribute 'fill-column-indicator nil
-                      :foreground "#717C7C" ; katana-gray
-                      :background "transparent")
-  (global-display-fill-column-indicator-mode 1))
-
-;; backup files
-(use-package emacs
-  :config
-  (setq backup-directory-alist `(("." . "~/.saves"))))
-
-;; lsp
-(use-package company
-  :init
-  (global-company-mode))
-
-;; eglot
-(use-package emacs
-  :hook (zig-mode . eglot-ensure)
-  :hook (rust-mode . eglot-ensure)
-  :hook (go-mode . eglot-ensure)
-  :hook (typescript-mode . eglot-ensure)
-  :hook (nix-mode . eglot-ensure)
-  :general
-  (leader-keys
-    "l" '(:ignore t :which-key "lsp")
-    "l <escape>" '(keyboard-escape-quit :which-key t)
-    "l r" '(eglot-rename :which-key "rename")
-    "l a" '(eglot-code-actions :which-key "code actions")))
-
-;; treesitter
-(use-package treesit-auto
-  :custom
-  (treesit-auto-install 'prompt)
-  :config
-  (treesit-auto-add-to-auto-mode-alist 'all)
-  (global-treesit-auto-mode))
-  
-;; language support
-(use-package markdown-mode
-  :config
-  (setq markdown-fontify-code-blocks-natively t))
-(use-package zig-mode
-  :general
-  (leader-keys
-    "m" '(:ignore t :which-key "mode")
-    "m <escape>" '(keyboard-escape-quit :which-key t)
-    "m b" '(zig-compile :which-key "build")
-    "m r" '(zig-run :which-key "run")
-    "m t" '(zig-test :which-key "test")))
-(use-package rust-mode
-  :general
-  (leader-keys
-    "m" '(:ignore t :which-key "mode")
-    "m <escape>" '(keyboard-escape-quit :which-key t)
-    "m b" '(rust-compile :which-key "build")
-    "m r" '(rust-run :which-key "run")
-    "m t" '(rust-test :which-key "test")
-    "m k" '(rust-check :which-key "check")
-    "m c" '(rust-run-clippy :which-key "clippy")))
-(use-package go-mode)
-(use-package gotest
-  :general
-  (leader-keys
-    "m" '(:ignore t :which-key "mode")
-    "m <escape>" '(keyboard-escape-quit :which-key t)
-    "m t" '(go-test-current-project :which-key "test")
-    "m r" '(go-run :which-key "run")))
-(use-package typescript-mode)
-(use-package fish-mode)
-(use-package nix-mode
-  :mode "\\.nix\\'")
-
-;; search
 (use-package rg
   :general
   (leader-keys
     "f" '(rg-menu :which-key "find")))
 
-;; compile (SPC c c / SPC c r)
-(use-package compile
-  :straight nil
-  :config
-  (setq compilation-scroll-output t
-        compilation-ask-about-save nil)
+;;; Git ---------------------------------------------------------------------
+
+(use-package magit
   :general
   (leader-keys
-    "c" '(:ignore t :which-key "compile")
-    "c <escape>" '(keyboard-escape-quit :which-key t)
+    "g g" '(magit-status :which-key "status")
+    "g l" '(magit-log :which-key "log"))
+  :config
+  ;; ESC closes a transient popup instead of needing C-g.
+  (with-eval-after-load 'transient
+    (define-key transient-map (kbd "<escape>") #'transient-quit-one)))
+
+(use-package diff-hl
+  :hook ((after-init . global-diff-hl-mode)
+         (magit-pre-refresh . diff-hl-magit-pre-refresh)
+         (magit-post-refresh . diff-hl-magit-post-refresh)))
+
+;;; Terminal / environment --------------------------------------------------
+
+(use-package vterm
+  :custom (vterm-shell (or (executable-find "fish") shell-file-name)))
+
+(use-package vterm-toggle
+  :general
+  (leader-keys
+    "'" '(vterm-toggle :which-key "terminal")))
+
+(use-package exec-path-from-shell
+  :if (or (daemonp) (memq window-system '(mac ns x pgtk)))
+  :demand t
+  :config
+  (exec-path-from-shell-initialize))
+
+;; direnv / nix flake per-project envs
+(use-package envrc
+  :hook (after-init . envrc-global-mode)
+  :general
+  (leader-keys
+    "e r" '(envrc-reload :which-key "reload")
+    "e a" '(envrc-allow :which-key "allow")
+    "e d" '(envrc-deny :which-key "deny")))
+
+;;; Completion / LSP / tree-sitter -----------------------------------------
+
+(use-package company
+  :custom
+  (company-idle-delay 0.2)
+  (company-minimum-prefix-length 2)
+  :hook (after-init . global-company-mode))
+
+(use-package eglot
+  :straight nil
+  :custom (eglot-autoshutdown t)
+  :hook ((c-mode c-ts-mode c++-mode c++-ts-mode
+          zig-mode zig-ts-mode
+          rust-mode rust-ts-mode
+          go-mode go-ts-mode
+          typescript-mode typescript-ts-mode tsx-ts-mode
+          nix-mode nix-ts-mode)
+         . eglot-ensure)
+  :general
+  (leader-keys
+    "l r" '(eglot-rename :which-key "rename")
+    "l a" '(eglot-code-actions :which-key "code actions")))
+
+(use-package treesit-auto
+  :demand t
+  :custom (treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
+
+;;; Languages ---------------------------------------------------------------
+
+(use-package markdown-mode
+  :custom (markdown-fontify-code-blocks-natively t))
+
+(use-package zig-mode)
+(use-package rust-mode)
+(use-package go-mode)
+(use-package gotest)
+(use-package typescript-mode)
+(use-package fish-mode)
+(use-package nix-mode
+  :mode "\\.nix\\'")
+
+;; One "SPC m ..." menu that dispatches on the current major mode, so the
+;; zig / rust / go bindings no longer overwrite each other.
+(defconst ab/mode-actions
+  '(((zig-mode zig-ts-mode)
+     (build . zig-compile) (run . zig-run) (test . zig-test))
+    ((rust-mode rust-ts-mode)
+     (build . rust-compile) (run . rust-run) (test . rust-test)
+     (check . rust-check) (clippy . rust-run-clippy))
+    ((go-mode go-ts-mode)
+     (run . go-run) (test . go-test-current-project)))
+  "Per-mode commands for the \"SPC m\" menu: ((MODES (ACTION . COMMAND)...)...).")
+
+(defun ab/mode-action (action)
+  "Run ACTION for the current major mode, if it defines one."
+  (let* ((entry (seq-find (lambda (e) (apply #'derived-mode-p (car e)))
+                          ab/mode-actions))
+         (command (cdr (assq action (cdr entry)))))
+    (if command
+        (call-interactively command)
+      (user-error "No %s action for %s" action major-mode))))
+
+(with-eval-after-load 'general
+  (pcase-dolist (`(,key ,action ,desc)
+                 '(("m b" build "build")
+                   ("m r" run "run")
+                   ("m t" test "test")
+                   ("m k" check "check")
+                   ("m c" clippy "clippy")))
+    (leader-keys key
+      `(,(lambda () (interactive) (ab/mode-action action)) :which-key ,desc))))
+
+;;; Compile -----------------------------------------------------------------
+
+(use-package compile
+  :straight nil
+  :custom
+  (compilation-scroll-output t)
+  (compilation-ask-about-save nil)
+  :hook (compilation-filter . ansi-color-compilation-filter)
+  :general
+  (leader-keys
     "c c" '(compile :which-key "compile")
     "c r" '(recompile :which-key "recompile")))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   '("e184d8607cc9933f2ba8e180699365bdf8b6f311834a9e15c71947b38be0caa3" default)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+
+;;; Custom ------------------------------------------------------------------
+
+(load custom-file 'noerror 'nomessage)
+
+;;; init.el ends here
