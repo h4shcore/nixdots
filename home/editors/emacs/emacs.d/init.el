@@ -285,15 +285,18 @@
         (call-interactively command)
       (user-error "No %s action for %s" action major-mode))))
 
-(with-eval-after-load 'general
-  (pcase-dolist (`(,key ,action ,desc)
-                 '(("m b" build "build")
-                   ("m r" run "run")
-                   ("m t" test "test")
-                   ("m k" check "check")
-                   ("m c" clippy "clippy")))
-    (leader-keys key
-      `(,(lambda () (interactive) (ab/mode-action action)) :which-key ,desc))))
+(defun ab/build () "Build for the current mode." (interactive) (ab/mode-action 'build))
+(defun ab/run () "Run for the current mode." (interactive) (ab/mode-action 'run))
+(defun ab/test () "Test for the current mode." (interactive) (ab/mode-action 'test))
+(defun ab/check () "Check for the current mode." (interactive) (ab/mode-action 'check))
+(defun ab/clippy () "Clippy for the current mode." (interactive) (ab/mode-action 'clippy))
+
+(leader-keys
+  "m b" '(ab/build :which-key "build")
+  "m r" '(ab/run :which-key "run")
+  "m t" '(ab/test :which-key "test")
+  "m k" '(ab/check :which-key "check")
+  "m c" '(ab/clippy :which-key "clippy"))
 
 ;;; Compile -----------------------------------------------------------------
 
