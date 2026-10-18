@@ -46,6 +46,7 @@
   (redisplay-skip-fontification-on-input t)
   (read-process-output-max (* 1024 1024)) ; faster LSP I/O
   (bidi-inhibit-bpa t)
+  (hl-line-sticky-flag nil)                  ; highlight only in the focused window
   (tab-always-indent 'complete)
   (read-extended-command-predicate #'command-completion-default-include-p)
   :init
@@ -81,6 +82,8 @@
   :hook
   ((prog-mode . display-line-numbers-mode)
    (prog-mode . display-fill-column-indicator-mode)
+   (prog-mode . hl-line-mode)
+   (text-mode . hl-line-mode)
    (after-init . global-auto-revert-mode)
    (after-init . savehist-mode)
    (after-init . save-place-mode)
@@ -90,7 +93,7 @@
 
 ;;; Appearance --------------------------------------------------------------
 
-(set-face-attribute 'default nil :font "MapleMono NF" :height 160)
+(set-face-attribute 'default nil :font "CaskaydiaCove NF" :height 160)
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/")
 (condition-case err
@@ -99,12 +102,50 @@
 
 (set-face-attribute 'fill-column-indicator nil :foreground "#717C7C")
 
-(use-package nerd-icons)
+;; Use the Nerd Font you already render with. Without this nerd-icons asks for
+;; "Symbols Nerd Font Mono"; if that isn't installed Emacs hunts for a fallback
+;; font on every glyph (slow) and the icons come out oversized.
+(use-package nerd-icons
+  :custom (nerd-icons-font-family "Symbols Nerd Font"))
 
-(use-package doom-modeline
-  :hook (after-init . doom-modeline-mode))
+(use-package mood-line
+  :custom
+  ;; Full-word evil state label, coloured from the theme's font-lock faces.
+  (mood-line-segment-modal-evil-state-alist
+   '((normal   . ("NORMAL"   . font-lock-variable-name-face))
+     (insert   . ("INSERT"   . font-lock-string-face))
+     (visual   . ("VISUAL"   . font-lock-keyword-face))
+     (replace  . ("REPLACE"  . font-lock-type-face))
+     (motion   . ("MOTION"   . font-lock-constant-face))
+     (operator . ("OPERATOR" . font-lock-function-name-face))
+     (emacs    . ("EMACS"    . font-lock-builtin-face))))
+  :hook (after-init . mood-line-mode)
+  :config
+  (setq mood-line-glyph-alist mood-line-glyphs-unicode)
 
+  ;; status dot, file name, line:col, percent, nyan  |  branch, diagnostics
+  (setq mood-line-format
+        (mood-line-defformat
+         :left
+         (((mood-line-segment-modal) . " ")
+          ((or (mood-line-segment-buffer-status) " ") . " ")
+          ((mood-line-segment-buffer-name) . "  ")
+          ((mood-line-segment-cursor-position) . " ")
+          ((mood-line-segment-scroll) . "  ")
+          (when (bound-and-true-p nyan-mode) (nyan-create)))
+         :right
+         (((mood-line-segment-vc) . "  ")
+          ((mood-line-segment-checker) . "  "))))
+
+  ;; Flat, roomier bar: pad the modeline with a box in its own background.
+  (dolist (face '(mode-line mode-line-inactive))
+    (let ((bg (face-background face nil t)))
+      (when (stringp bg)
+        (set-face-attribute face nil :box (list :line-width '(8 . 6) :color bg))))))
+
+;; The cat itself; drawn inside the mood-line format above.
 (use-package nyan-mode
+  :custom (nyan-bar-length 16)
   :hook (after-init . nyan-mode))
 
 ;;; Evil + leader -----------------------------------------------------------
@@ -162,6 +203,7 @@
     "d" '(:ignore t :which-key "diagnostics")
     "D" '(:ignore t :which-key "debug")
     "f" '(:ignore t :which-key "find")
+    "t" '(:ignore t :which-key "tree")
     "p" '(:ignore t :which-key "projects")
     "g" '(:ignore t :which-key "git")
     "e" '(:ignore t :which-key "envrc")
@@ -170,7 +212,7 @@
     "c" '(:ignore t :which-key "compile"))
 
   ;; Avoid "SPC <group> ESC is undefined" errors; just abort.
-  (dolist (group '("b" "w" "d" "D" "f" "p" "g" "e" "l" "m" "c"))
+  (dolist (group '("b" "w" "d" "D" "f" "t" "p" "g" "e" "l" "m" "c"))
     (leader-keys (concat group " <escape>") '(keyboard-escape-quit :which-key t))))
 
 (use-package evil-nerd-commenter
@@ -233,6 +275,39 @@
     "p p" '(projectile-switch-project :which-key "switch project")
     "p a" '(projectile-add-known-project :which-key "add project")
     "p r" '(projectile-remove-known-project :which-key "remove project")))
+
+;;; File tree ---------------------------------------------------------------
+
+(use-package treemacs
+  :custom
+  (treemacs-width 30)
+  (treemacs-indentation 2)
+  :config
+  (treemacs-follow-mode 1)            ; keep the tree on the current file
+  (treemacs-filewatch-mode 1)         ; auto-refresh on disk changes
+  (treemacs-git-mode 'simple)         ; file-level git colours, no python/subprocess
+  (treemacs-fringe-indicator-mode 'only-when-focused)
+  ;; Roomy rows like the reference screenshot; raise/lower to taste.
+  (add-hook 'treemacs-mode-hook (lambda () (setq-local line-spacing 6)))
+  :general
+  (leader-keys
+    "t t" '(treemacs :which-key "toggle tree")
+    "t s" '(treemacs-select-window :which-key "focus tree")
+    "t f" '(treemacs-find-file :which-key "reveal current file")
+    "t p" '(treemacs-add-and-display-current-project-exclusively
+            :which-key "show only this project")))
+
+(use-package treemacs-projectile
+  :after (treemacs projectile))
+
+(use-package treemacs-magit
+  :after (treemacs magit))
+
+;; Nerd Font folder/file icons (same family as the screenshot).
+(use-package treemacs-nerd-icons
+  :after (treemacs nerd-icons)
+  :config
+  (treemacs-load-theme "nerd-icons"))
 
 ;;; Git ---------------------------------------------------------------------
 

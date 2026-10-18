@@ -1,18 +1,19 @@
-{pkgs, ...}: {
+{ pkgs, ... }: {
   fonts.fontconfig = {
     enable = true;
 
     defaultFonts = {
       monospace = [
-        "MapleMono NF"
+        "CaskaydiaCove NF"
+        "Symbols Nerd Font Mono"
       ];
 
       sansSerif = [
-        "MapleMono NF"
+        "DejaVu Sans"
       ];
 
       serif = [
-        "MapleMono NF"
+        "DejaVu Serif"
       ];
 
       emoji = [
@@ -22,8 +23,9 @@
   };
 
   home.packages = with pkgs; [
+    nerd-fonts.caskaydia-cove
+    nerd-fonts.symbols-only
     noto-fonts-color-emoji
     material-symbols
-    maple-mono.NF
   ];
 }
