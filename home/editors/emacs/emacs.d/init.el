@@ -46,6 +46,8 @@
   (redisplay-skip-fontification-on-input t)
   (read-process-output-max (* 1024 1024)) ; faster LSP I/O
   (bidi-inhibit-bpa t)
+  (tab-always-indent 'complete)
+  (read-extended-command-predicate #'command-completion-default-include-p)
   :init
   (setq-default indent-tabs-mode nil
                 tab-width 2
@@ -82,7 +84,9 @@
    (after-init . global-auto-revert-mode)
    (after-init . savehist-mode)
    (after-init . save-place-mode)
-   (after-init . recentf-mode)))
+   (after-init . recentf-mode)
+   (after-init . winner-mode)
+   (after-init . electric-pair-mode)))
 
 ;;; Appearance --------------------------------------------------------------
 
@@ -143,6 +147,20 @@
           :which-key "open init file")
     "b" '(:ignore t :which-key "buffer")
     "bd" '(kill-current-buffer :which-key "kill buffer")
+    "w" '(:ignore t :which-key "window")
+    "wv" '(split-window-right :which-key "split right")
+    "ws" '(split-window-below :which-key "split below")
+    "wd" '(delete-window :which-key "close window")
+    "wo" '(delete-other-windows :which-key "only this window")
+    "wh" '(evil-window-left :which-key "focus left")
+    "wj" '(evil-window-down :which-key "focus down")
+    "wk" '(evil-window-up :which-key "focus up")
+    "wl" '(evil-window-right :which-key "focus right")
+    "w=" '(balance-windows :which-key "balance")
+    "wu" '(winner-undo :which-key "undo layout")
+    "wr" '(winner-redo :which-key "redo layout")
+    "d" '(:ignore t :which-key "diagnostics")
+    "D" '(:ignore t :which-key "debug")
     "f" '(:ignore t :which-key "find")
     "p" '(:ignore t :which-key "projects")
     "g" '(:ignore t :which-key "git")
@@ -152,7 +170,7 @@
     "c" '(:ignore t :which-key "compile"))
 
   ;; Avoid "SPC <group> ESC is undefined" errors; just abort.
-  (dolist (group '("b" "f" "p" "g" "e" "l" "m" "c"))
+  (dolist (group '("b" "w" "d" "D" "f" "p" "g" "e" "l" "m" "c"))
     (leader-keys (concat group " <escape>") '(keyboard-escape-quit :which-key t))))
 
 (use-package evil-nerd-commenter
@@ -194,6 +212,17 @@
     "f l" '(consult-line :which-key "line")
     "f i" '(consult-imenu :which-key "symbols")
     "f r" '(consult-recent-file :which-key "recent")))
+
+(use-package embark
+  :bind (("C-." . embark-act)
+         ("C-;" . embark-dwim))
+  :init
+  ;; C-h after a prefix key shows a searchable list of its bindings.
+  (setq prefix-help-command #'embark-prefix-help-command))
+
+(use-package embark-consult
+  :after (embark consult)
+  :hook (embark-collect-mode . consult-preview-at-point-mode))
 
 (use-package projectile
   :custom (projectile-completion-system 'default)
@@ -249,11 +278,21 @@
 
 ;;; Completion / LSP --------------------------------------------------------
 
-(use-package company
+(use-package corfu
   :custom
-  (company-idle-delay 0.2)
-  (company-minimum-prefix-length 2)
-  :hook (after-init . global-company-mode))
+  (corfu-auto t)
+  (corfu-auto-delay 0.2)
+  (corfu-auto-prefix 2)
+  (corfu-cycle t)
+  :hook (after-init . global-corfu-mode)
+  :config
+  (corfu-popupinfo-mode 1))
+
+;; Extra completion sources used as fallbacks after eglot / the major mode.
+(use-package cape
+  :init
+  (add-hook 'completion-at-point-functions #'cape-file)
+  (add-hook 'completion-at-point-functions #'cape-dabbrev))
 
 (use-package eglot
   :straight nil
@@ -263,7 +302,41 @@
   :general
   (leader-keys
     "l r" '(eglot-rename :which-key "rename")
-    "l a" '(eglot-code-actions :which-key "code actions")))
+    "l a" '(eglot-code-actions :which-key "code actions")
+    "l F" '(eglot-format-buffer :which-key "format (LSP)")))
+
+(use-package flymake
+  :straight nil
+  :general
+  (leader-keys
+    "d n" '(flymake-goto-next-error :which-key "next error")
+    "d p" '(flymake-goto-prev-error :which-key "previous error")
+    "d l" '(consult-flymake :which-key "search diagnostics")
+    "d b" '(flymake-show-buffer-diagnostics :which-key "buffer list")
+    "d P" '(flymake-show-project-diagnostics :which-key "project list"))
+  (general-nmap
+    "]d" #'flymake-goto-next-error
+    "[d" #'flymake-goto-prev-error))
+
+;; Manual formatting only: nothing runs on save. SPC l f formats the buffer
+;; with the external formatter for the mode (clang-format, rustfmt, gofmt...).
+(use-package apheleia
+  :general
+  (leader-keys
+    "l f" '(apheleia-format-buffer :which-key "format buffer")))
+
+;; Debugger (DAP) client; works with gdb / lldb-dap / delve / codelldb.
+(use-package dape
+  :general
+  (leader-keys
+    "D d" '(dape :which-key "start debugger")
+    "D b" '(dape-breakpoint-toggle :which-key "breakpoint")
+    "D c" '(dape-continue :which-key "continue")
+    "D n" '(dape-next :which-key "step over")
+    "D i" '(dape-step-in :which-key "step in")
+    "D o" '(dape-step-out :which-key "step out")
+    "D r" '(dape-restart :which-key "restart")
+    "D q" '(dape-quit :which-key "quit")))
 
 ;;; Languages ---------------------------------------------------------------
 
@@ -312,6 +385,29 @@
   "m t" '(ab/test :which-key "test")
   "m k" '(ab/check :which-key "check")
   "m c" '(ab/clippy :which-key "clippy"))
+
+;;; Quality of life ---------------------------------------------------------
+
+(use-package vundo
+  :custom (vundo-glyph-alist vundo-unicode-symbols)
+  :general
+  (leader-keys
+    "u" '(vundo :which-key "undo tree")))
+
+(use-package hl-todo
+  :hook (prog-mode . hl-todo-mode))
+
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+
+(use-package helpful
+  :bind (([remap describe-function] . helpful-callable)
+         ([remap describe-variable] . helpful-variable)
+         ([remap describe-command] . helpful-command)
+         ([remap describe-key] . helpful-key)))
+
+(use-package editorconfig
+  :hook (after-init . editorconfig-mode))
 
 ;;; Compile -----------------------------------------------------------------
 
