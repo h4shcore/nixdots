@@ -81,7 +81,8 @@
    (prog-mode . display-fill-column-indicator-mode)
    (after-init . global-auto-revert-mode)
    (after-init . savehist-mode)
-   (after-init . save-place-mode)))
+   (after-init . save-place-mode)
+   (after-init . recentf-mode)))
 
 ;;; Appearance --------------------------------------------------------------
 
@@ -142,6 +143,7 @@
           :which-key "open init file")
     "b" '(:ignore t :which-key "buffer")
     "bd" '(kill-current-buffer :which-key "kill buffer")
+    "f" '(:ignore t :which-key "find")
     "p" '(:ignore t :which-key "projects")
     "g" '(:ignore t :which-key "git")
     "e" '(:ignore t :which-key "envrc")
@@ -150,7 +152,7 @@
     "c" '(:ignore t :which-key "compile"))
 
   ;; Avoid "SPC <group> ESC is undefined" errors; just abort.
-  (dolist (group '("b" "p" "g" "e" "l" "m" "c"))
+  (dolist (group '("b" "f" "p" "g" "e" "l" "m" "c"))
     (leader-keys (concat group " <escape>") '(keyboard-escape-quit :which-key t))))
 
 (use-package evil-nerd-commenter
@@ -160,23 +162,48 @@
 
 ;;; Navigation / projects ---------------------------------------------------
 
-(use-package ivy
-  :hook (after-init . ivy-mode))
+(use-package vertico
+  :custom (vertico-cycle t)
+  :hook (after-init . vertico-mode))
+
+;; Backspace deletes a whole path component in find-file.
+(use-package vertico-directory
+  :straight nil
+  :after vertico
+  :bind (:map vertico-map ("DEL" . vertico-directory-delete-char))
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+
+(use-package orderless
+  :demand t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
+
+(use-package marginalia
+  :hook (after-init . marginalia-mode))
+
+(use-package consult
+  :custom
+  ;; search/preview relative to the projectile root
+  (consult-project-function (lambda (_may-prompt) (projectile-project-root)))
+  :general
+  (leader-keys
+    "b b" '(consult-buffer :which-key "switch buffer")
+    "f f" '(find-file :which-key "file")
+    "f g" '(consult-ripgrep :which-key "grep")
+    "f l" '(consult-line :which-key "line")
+    "f i" '(consult-imenu :which-key "symbols")
+    "f r" '(consult-recent-file :which-key "recent")))
 
 (use-package projectile
+  :custom (projectile-completion-system 'default)
   :hook (after-init . projectile-mode)
   :general
   (leader-keys
     "SPC" '(projectile-find-file :which-key "find file")
-    "b b" '(projectile-switch-to-buffer :which-key "switch buffer")
     "p p" '(projectile-switch-project :which-key "switch project")
     "p a" '(projectile-add-known-project :which-key "add project")
     "p r" '(projectile-remove-known-project :which-key "remove project")))
-
-(use-package rg
-  :general
-  (leader-keys
-    "f" '(rg-menu :which-key "find")))
 
 ;;; Git ---------------------------------------------------------------------
 
