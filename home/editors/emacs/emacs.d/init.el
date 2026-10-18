@@ -220,7 +220,7 @@
     "e a" '(envrc-allow :which-key "allow")
     "e d" '(envrc-deny :which-key "deny")))
 
-;;; Completion / LSP / tree-sitter -----------------------------------------
+;;; Completion / LSP --------------------------------------------------------
 
 (use-package company
   :custom
@@ -231,24 +231,12 @@
 (use-package eglot
   :straight nil
   :custom (eglot-autoshutdown t)
-  :hook ((c-mode c-ts-mode c++-mode c++-ts-mode
-          zig-mode zig-ts-mode
-          rust-mode rust-ts-mode
-          go-mode go-ts-mode
-          typescript-mode typescript-ts-mode tsx-ts-mode
-          nix-mode nix-ts-mode)
+  :hook ((c-mode c++-mode zig-mode rust-mode go-mode typescript-mode nix-mode)
          . eglot-ensure)
   :general
   (leader-keys
     "l r" '(eglot-rename :which-key "rename")
     "l a" '(eglot-code-actions :which-key "code actions")))
-
-(use-package treesit-auto
-  :demand t
-  :custom (treesit-auto-install 'prompt)
-  :config
-  (treesit-auto-add-to-auto-mode-alist 'all)
-  (global-treesit-auto-mode))
 
 ;;; Languages ---------------------------------------------------------------
 
@@ -267,12 +255,12 @@
 ;; One "SPC m ..." menu that dispatches on the current major mode, so the
 ;; zig / rust / go bindings no longer overwrite each other.
 (defconst ab/mode-actions
-  '(((zig-mode zig-ts-mode)
+  '(((zig-mode)
      (build . zig-compile) (run . zig-run) (test . zig-test))
-    ((rust-mode rust-ts-mode)
+    ((rust-mode)
      (build . rust-compile) (run . rust-run) (test . rust-test)
      (check . rust-check) (clippy . rust-run-clippy))
-    ((go-mode go-ts-mode)
+    ((go-mode)
      (run . go-run) (test . go-test-current-project)))
   "Per-mode commands for the \"SPC m\" menu: ((MODES (ACTION . COMMAND)...)...).")
 
