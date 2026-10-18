@@ -119,11 +119,6 @@
   :config
   (evil-collection-init))
 
-(use-package evil-nerd-commenter
-  :general
-  (general-nvmap
-    "gc" #'evilnc-comment-operator))
-
 (use-package which-key
   :custom (which-key-idle-delay 0.5)
   :hook (after-init . which-key-mode))
@@ -157,6 +152,11 @@
   ;; Avoid "SPC <group> ESC is undefined" errors; just abort.
   (dolist (group '("b" "p" "g" "e" "l" "m" "c"))
     (leader-keys (concat group " <escape>") '(keyboard-escape-quit :which-key t))))
+
+(use-package evil-nerd-commenter
+  :general
+  (general-nvmap
+    "gc" #'evilnc-comment-operator))
 
 ;;; Navigation / projects ---------------------------------------------------
 
