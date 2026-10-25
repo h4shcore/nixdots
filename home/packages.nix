@@ -16,5 +16,8 @@
     woomer
     matugen
     inputs.vivy.packages.${pkgs.stdenv.hostPlatform.system}.default # github:h4shcore/vivy
+
+    godot # why not
+    audacity
   ];
 }

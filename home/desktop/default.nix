@@ -30,6 +30,7 @@
     # ./hypr
     # ./quickshell
     ./haze
+    ./island
     ./wallpaper
   ];
 

@@ -193,6 +193,26 @@
         "type": "github"
       }
     },
+    "island": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792917548,
+        "narHash": "sha256-t8cOYAo+Q5mQVRqkw3XKJ6aW8/KZzGWJga++2IpaNYI=",
+        "owner": "h4shcore",
+        "repo": "island",
+        "rev": "188fe27af2023595ac9bc285128cdb8f0b992570",
+        "type": "github"
+      },
+      "original": {
+        "owner": "h4shcore",
+        "repo": "island",
+        "type": "github"
+      }
+    },
     "nix-doom-emacs-unstraightened": {
       "inputs": {
         "doomdir": "doomdir",
@@ -378,6 +398,7 @@
       "inputs": {
         "haze": "haze",
         "home-manager": "home-manager",
+        "island": "island",
         "nix-doom-emacs-unstraightened": "nix-doom-emacs-unstraightened",
         "nix-gaming": "nix-gaming",
         "nixpkgs": "nixpkgs_2",
