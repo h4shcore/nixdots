@@ -28,8 +28,6 @@
     ./fuzzel
     ./niri
     # ./hypr
-    # ./quickshell
-    ./haze
     ./island
     ./wallpaper
   ];

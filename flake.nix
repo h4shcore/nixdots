@@ -16,10 +16,6 @@
     };
     nix-gaming.url = "github:fufexan/nix-gaming";
     vivy.url = "github:h4shcore/vivy";
-    haze = {
-      url = "github:h4shcore/haze";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     island = {
       url = "github:h4shcore/island";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -152,27 +152,6 @@
         "type": "github"
       }
     },
-    "haze": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "quickshell": "quickshell"
-      },
-      "locked": {
-        "lastModified": 1792499155,
-        "narHash": "sha256-zH+MZuh4MC8WdoR2oSPkIlHzJbrgClMGL4ssdLsf9jQ=",
-        "owner": "h4shcore",
-        "repo": "haze",
-        "rev": "e6b6a3f77898aefa1d529d897f782bb1630a22fc",
-        "type": "github"
-      },
-      "original": {
-        "owner": "h4shcore",
-        "repo": "haze",
-        "type": "github"
-      }
-    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -200,11 +179,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792918247,
-        "narHash": "sha256-IDRzDhHuUJn8bebU6N49YjyKjWBFC47nw9vZKGzTItE=",
+        "lastModified": 1792920094,
+        "narHash": "sha256-43PP2+VTrGP8rE5F23SAgIsFzAVgyr15OBmmFjNALQw=",
         "owner": "h4shcore",
         "repo": "island",
-        "rev": "efcea5f00a67b61378df94faf3c7373b50cac5aa",
+        "rev": "5dd4e24223970883e67afbc5797f53c7b2da6c41",
         "type": "github"
       },
       "original": {
@@ -373,30 +352,8 @@
         "type": "github"
       }
     },
-    "quickshell": {
-      "inputs": {
-        "nixpkgs": [
-          "haze",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1791448974,
-        "narHash": "sha256-lPbqsyAD5ZoGFMZ1eqAlTULfeP5Nwhy+XvOowF7BE+E=",
-        "owner": "quickshell-mirror",
-        "repo": "quickshell",
-        "rev": "4f508be500dea6e5732cc3d50382a0048b17e7b1",
-        "type": "github"
-      },
-      "original": {
-        "owner": "quickshell-mirror",
-        "repo": "quickshell",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
-        "haze": "haze",
         "home-manager": "home-manager",
         "island": "island",
         "nix-doom-emacs-unstraightened": "nix-doom-emacs-unstraightened",
