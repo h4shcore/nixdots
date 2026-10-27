@@ -179,11 +179,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792920094,
-        "narHash": "sha256-43PP2+VTrGP8rE5F23SAgIsFzAVgyr15OBmmFjNALQw=",
+        "lastModified": 1793111531,
+        "narHash": "sha256-isBUSDEhCXvbXwa3kZeyqYo6HoSNfHXgIc89Fbybpk4=",
         "owner": "h4shcore",
         "repo": "island",
-        "rev": "5dd4e24223970883e67afbc5797f53c7b2da6c41",
+        "rev": "cb180531213df7059774b414b19c82a347f33302",
         "type": "github"
       },
       "original": {
